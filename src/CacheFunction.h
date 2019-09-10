@@ -10,6 +10,10 @@
 #include <queue>
 #include <cmath>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 namespace github { // Begin of namespace github
 
 class Solution {
