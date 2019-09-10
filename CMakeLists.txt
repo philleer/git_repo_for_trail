@@ -12,6 +12,9 @@ include_directories(${Eigen_DIR})
 find_package(g2o REQUIRED)
 include_directories(${g2o_INCLUDE_DIRS})
 
+find_package(OpenCV 3 REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 add_subdirectory(src bin)
 include_directories("./src")
 
@@ -22,4 +25,5 @@ add_executable(git_repo ${DIR_SRCS})
 target_link_libraries(git_repo
 		src
 		${g2o_LIBRARIES}
+		${OpenCV_LIBS}
 		)
