@@ -10,7 +10,6 @@ void github::Option::Run() {
 	github::Solution().myqueen();
 
 	
-
 	auto end = std::chrono::system_clock::now();
 	auto duration = std::chrono::duration<double>(end - start);
 	std::cout << "Cost time " << duration.count() << " s" << std::endl;
