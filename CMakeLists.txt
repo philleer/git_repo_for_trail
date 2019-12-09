@@ -6,13 +6,21 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE RELEASE)
 
 set(Eigen_DIR "/usr/include/eigen3")
-include_directories(${Eigen_DIR})
-
-find_package(g2o REQUIRED)
-include_directories(${g2o_INCLUDE_DIRS})
 
 find_package(OpenCV 3 REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(OpenMP REQUIRED)
+
+if (OPENMP_FOUND)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif(OPENMP_FOUND)
+
+include_directories(
+	src
+	${Eigen_DIR}
+	${OpenCV_INCLUDE_DIRS}
+	${OpenMP_INCLUDE_DIRS}
+	)
 
 add_subdirectory(src bin)
 include_directories("./src")
@@ -25,5 +33,6 @@ target_link_libraries(main
 		src
 		${g2o_LIBRARIES}
 		${OpenCV_LIBS}
-		)
+		${OpenMP_LIBRARIES}
+	)
 
