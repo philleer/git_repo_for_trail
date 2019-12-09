@@ -12,4 +12,5 @@ add_library(src STATIC ${DIR_SRC})
 target_link_libraries(
 		src
 		# base math reserve
+		${OpenCV_LIBS}
  		)
