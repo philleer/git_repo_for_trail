@@ -1,5 +1,5 @@
 #include "CacheFunction.h"
-#include <sstream>
+#include <sstream>	// std::stringstream
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <cstdlib>	// std::rand, RAND_MAX
@@ -165,25 +165,25 @@ public:
 	
 private:
 	void precompute_pixels_weights(const cv::Mat &img, cv::Mat &weights,
-								   int window_size);
+				       int window_size);
 	void initialize_random_planes(Matrix2D<Plane> &planes, float max_d);
 	void evaluate_planes_cost(int idx);
 	float plane_match_cost(const Plane &p, int cx, int cy, int ws, int idx);
 	float dissimilarity(const cv::Vec3f &pp, const cv::Vec3f &qq,
-						const cv::Vec2f &pg, const cv::Vec2f &qg);
+			    const cv::Vec2f &pg, const cv::Vec2f &qg);
 	void process_pixel(int x, int y, int cpv, int iter);
 	void planes_to_disparity(const Matrix2D<Plane> &planes, cv::Mat &disp);
 
 	void spatial_propagation(int x, int y, int cpv, int iter);
 	void view_propagation(int x, int y, int cpv);
 	void plane_refinement(int x, int y, int cpv, float max_delta_z,
-						  float max_delta_n, float end_dz);
+			      float max_delta_n, float end_dz);
 	void fill_invalid_pixels(int y, int x, Matrix2D<Plane> &planes,
-							 const cv::Mat &validity);
+				 const cv::Mat &validity);
 	void weighted_median_filter(int cx, int cy, cv::Mat &disp,
-								const cv::Mat &weights,
-								const cv::Mat &validity,
-								int ws, bool use_invalid);
+				    const cv::Mat &weights,
+				    const cv::Mat &validity,
+				    int ws, bool use_invalid);
 
 	int rows;
 	int cols;
@@ -201,7 +201,7 @@ PatchMatch::PatchMatch(float _alpha, float _gamma, float _tc, float _tg) :
 PatchMatch::~PatchMatch() {}
 
 void PatchMatch::operator()(const cv::Mat &img1, const cv::Mat &img2,
-							int iterations, bool reverse)
+			    int iterations, bool reverse)
 {
 	this->set(img1, img2);
 	this->process(iterations, reverse);
@@ -212,8 +212,8 @@ cv::Mat PatchMatch::getLeftDisparityMap() const { return this->disps[0]; }
 cv::Mat PatchMatch::getRightDisparityMap() const { return this->disps[1]; }
 
 void PatchMatch::precompute_pixels_weights(const cv::Mat &img,
-										   cv::Mat &weights,
-										   int window_size)
+					   cv::Mat &weights,
+					   int window_size)
 {
 	int ws_half = window_size/2;
 
@@ -260,9 +260,9 @@ void PatchMatch::evaluate_planes_cost(int idx) {
 	#pragma omp parallel for
 	for (int y = 0; y < rows; ++y) {
 		for (int x = 0; x < cols; ++x) {
-			this->costs[idx].at<float>(y, x) = plane_match_cost(planes[idx](y, x),
-																x, y, WINDOW_SIZE,
-																idx);
+			this->costs[idx].at<float>(y, x) = plane_match_cost(planes[idx](y, x), 
+									    x, y, WINDOW_SIZE,
+									    idx);
 		}
 	}
 }
@@ -295,10 +295,9 @@ float PatchMatch::plane_match_cost(const Plane &p, int cx, int cy, int ws, int i
 
 				// wx*x + (1-wx)*y
 				cv::Vec3b mcolo = wm*f2.at<cv::Vec3b>(y, x_match) +
-								  (1-wm)*f2.at<cv::Vec3b>(y, x_match+1);
+						  (1-wm)*f2.at<cv::Vec3b>(y, x_match+1);
 				cv::Vec2b mgrad = wm*g2(y, x_match) + (1-wm)*g2(y, x_match+1);
-				float w = w1.at<float>(
-								cv::Vec<int, 4>{cy, cx, y-cy+half, x-cx+half});
+				float w = w1.at<float>(cv::Vec<int, 4>{cy, cx, y-cy+half, x-cx+half});
 				cv::Vec3f pp, qq;
 				for (int i = 0; i < 3; ++i) {
 					pp[i] = static_cast<float>(f1.at<cv::Vec3b>(y, x)[i]);
@@ -317,7 +316,7 @@ float PatchMatch::plane_match_cost(const Plane &p, int cx, int cy, int ws, int i
 }
 
 float PatchMatch::dissimilarity(const cv::Vec3f &pp, const cv::Vec3f &qq,
-	const cv::Vec2f &pg, const cv::Vec2f &qg)
+				const cv::Vec2f &pg, const cv::Vec2f &qg)
 {
 	float cost_c = cv::norm(pp-qq, cv::NORM_L1);
 	float cost_g = cv::norm(pg-qg, cv::NORM_L1);
@@ -389,7 +388,8 @@ void PatchMatch::spatial_propagation(int x, int y, int idx, int iter) {
 }
 
 void PatchMatch::plane_refinement(int x, int y, int idx, float max_delta_z,
-	float max_delta_n, float end_dz) {
+				  float max_delta_n, float end_dz)
+{
 	int sign = (idx==0 ? -1 : 1);
 	float max_dz = max_delta_z;
 	float max_dn = max_delta_n;
@@ -429,8 +429,8 @@ void PatchMatch::planes_to_disparity(const Matrix2D<Plane> &planes, cv::Mat &dis
 	for (int x = 0; x < cols; ++x) {
 		for (int y = 0; y < rows; ++y) {
 			disp.at<float>(y, x) = planes(y, x)[0]*x +
-								   planes(y, x)[1]*y +
-								   planes(y, x)[2];
+					       planes(y, x)[1]*y +
+					       planes(y, x)[2];
 		}
 	}
 }
@@ -492,13 +492,13 @@ void PatchMatch::postProcess() {
 	for (int y = 0; y < rows; ++y) {
 		for (int x = 0; x < cols; ++x) {
 			int x_rgt_match = std::max(0.0f,
-									   std::min((float)cols,
-									   			x-disps[0].at<float>(y, x))
-									   );
+						   std::min((float)cols,
+							    x-disps[0].at<float>(y, x))
+						  );
 			int x_lft_match = std::max(0.0f,
-									   std::min((float)rows,
-									   			x+disps[1].at<float>(y, x))
-									   );
+						   std::min((float)rows,
+							    x+disps[1].at<float>(y, x))
+						  );
 			lft_validity.at<unsigned char>(y, x) = (
 					std::abs(disps[0].at<float>(y, x) -
 					disps[1].at<float>(y, x_rgt_match)) <= 1 ? 1 : 0);
@@ -527,9 +527,9 @@ void PatchMatch::postProcess() {
 	for (int x=0; x <cols; ++x) {
 		for (int y=0; y < rows; ++y) {
 			weighted_median_filter(x, y, disps[0], weights[0], lft_validity,
-								   WINDOW_SIZE, false);
+					       WINDOW_SIZE, false);
 			weighted_median_filter(x, y, disps[1], weights[1], rgt_validity,
-								   WINDOW_SIZE, false);
+					       WINDOW_SIZE, false);
 		}
 	}
 }
@@ -558,10 +558,10 @@ void PatchMatch::fill_invalid_pixels(int y, int x, Matrix2D<Plane> &planes,
 	planes(y, x) = planes(y, best_plane_x);
 }
 
-void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp,
-										const cv::Mat &weights,
-										const cv::Mat &validity,
-										int ws, bool use_invalid)
+void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp, 
+					const cv::Mat &weights,
+					const cv::Mat &validity,
+					int ws, bool use_invalid)
 {
 	int half = ws / 2;
 	float w_tot = 0;
@@ -574,7 +574,7 @@ void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp,
 				cv::Vec<int, 4> w_ids({cy, cx, y-cy+half, x-cx+half});
 				w_tot += weights.at<float>(w_ids);
 				disps_w.push_back(std::make_pair(weights.at<float>(w_ids),
-												 disp.at<float>(y, x)));
+								 disp.at<float>(y, x)));
 			}
 		}
 	}
