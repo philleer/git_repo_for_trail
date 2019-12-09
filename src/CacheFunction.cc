@@ -1,5 +1,5 @@
 #include "CacheFunction.h"
-#include <sstream>
+#include <sstream>	// std::stringstream
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <cstdlib>	// std::rand, RAND_MAX
