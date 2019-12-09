@@ -6,7 +6,7 @@
 #include <random>	// std::mt19937
 #include <algorithm>
 
-#define WINDOW_SIZE 9
+#define WINDOW_SIZE 35
 #define MAX_DISPARITY 60
 #define PLANE_PENALTY 120
 
@@ -15,7 +15,7 @@ class Matrix2D {
 public:
 	Matrix2D();
 	Matrix2D(size_t rows, size_t cols);
-	Matrix2D(size_t rows, size_t cols, const T &def);
+	// Matrix2D(size_t rows, size_t cols, const T &def);
 
 	T& operator()(size_t row, size_t col);
 	const T& operator()(size_t row, size_t col) const;
@@ -35,14 +35,12 @@ template<typename T>
 Matrix2D<T>::Matrix2D(size_t rows, size_t cols):
 	rows(rows), cols(cols), data(rows, std::vector<T>(cols)) {}
 
-template<typename T>
-Matrix2D<T>::Matrix2D(size_t rows, size_t cols, const T&def):
-	rows(rows), cols(cols), data(rows, std::vector<T>(cols, def)) {}
+// template<typename T>
+// Matrix2D<T>::Matrix2D(size_t rows, size_t cols, const T&def):
+// 	rows(rows), cols(cols), data(rows, std::vector<T>(cols, def)) {}
 
 template<typename T>
-inline T& Matrix2D<T>::operator()(size_t row, size_t col) {
-	return data[row][col];
-}
+inline T& Matrix2D<T>::operator()(size_t row, size_t col) { return data[row][col]; }
 
 template<typename T>
 inline const T& Matrix2D<T>::operator()(size_t row, size_t col) const {
@@ -51,9 +49,8 @@ inline const T& Matrix2D<T>::operator()(size_t row, size_t col) const {
 
 class Plane{
 public:
-	Plane();
+	Plane() {}
 	Plane(cv::Vec3f point, cv::Vec3f normal);
-	~Plane();
 	
 	float operator[] (int idx) const;
 	cv::Vec3f operator()();
@@ -61,7 +58,6 @@ public:
 	cv::Vec3f getPoint();
 	cv::Vec3f getNormal();
 	cv::Vec3f getCoeff();
-
 	Plane viewTransform(int x, int y, int sign, int &qx, int &qy);
 
 private:
@@ -70,19 +66,20 @@ private:
 	cv::Vec3f coeff;
 };
 
-Plane::Plane() {}
-Plane::~Plane() {}
-
 // ax + by +cz = 0
-// z = -a/c x -b/c y -d/c
-// a = nx, b = ny, c = nz, d = -(nx p[0] + ny p[1] + nz p[2])
+// z = - a/c * x - b/c * y - d/c
+// a = nx, b = ny, c = nz, d = -(nx * p[0] + ny * p[1] + nz * p[2])
 Plane::Plane(cv::Vec3f point, cv::Vec3f normal): point(point), normal(normal) {
-	float a = -normal[0] / normal[2];
-	float b = -normal[1] / normal[2];
-	float c = (normal[0]*point[0]+normal[1]*point[1]+normal[2]*point[2])/normal[2];
+	// float a = -normal[0] / normal[2];
+	// float b = -normal[1] / normal[2];
+	// float c = (normal[0]*point[0]+normal[1]*point[1]+normal[2]*point[2])/normal[2];
 
 	// float d = cv::sum(normal.mul(point))[0] / normal[2];
-	coeff = cv::Vec3f(a, b, c);
+	// coeff = cv::Vec3f(a, b, c);
+
+	coeff[0] = -normal[0] / normal[2];
+	coeff[1] = -normal[1] / normal[2];
+	coeff[2] = (normal[0]*point[0]+normal[1]*point[1]+normal[2]*point[2])/normal[2];
 }
 
 inline float Plane::operator[](int idx) const { return coeff[idx]; }
@@ -94,8 +91,9 @@ inline	cv::Vec3f Plane::getCoeff() { return coeff; }
 Plane Plane::viewTransform(int x, int y, int sign, int &qx, int &qy) {
 	float z = coeff[0]*x + coeff[1]*y + coeff[2];
 	qx = x + sign*z;
+	qy = y;
 
-	cv::Vec3f p(qx, y, z);
+	cv::Vec3f p(qx, qy, z);
 	return Plane(p, this->normal);
 }
 
@@ -137,19 +135,12 @@ void compute_gray_gradient(const cv::Mat &img, cv::Mat &grad) {
 	}
 }
 
-// inline float disparity(float x, float y, const Plane &p) {
-// 	return p[0]*x + p[1]*y + p[2];
-// }
-
 class PatchMatch {
 public:
-	PatchMatch(float _alpha, float _gamma, float _tc, float _tg);
+	PatchMatch(float alpha, float gamma, float tc, float tg);
 	PatchMatch(const PatchMatch &pm) = delete;
-	~PatchMatch();
 
 	PatchMatch &operator=(const	PatchMatch &pm) = delete;
-	void operator() (const cv::Mat &img1, const cv::Mat &img2, int iterations,
-					 bool reverse=false);
 
 	void set(const cv::Mat &img1, const cv::Mat &img2);
 	void process(int iterations, bool reverse = false);
@@ -188,48 +179,36 @@ private:
 	int rows;
 	int cols;
 	cv::Mat views[2];
-	cv::Mat2f grads[2];
+	cv::Mat grads[2];
 	cv::Mat disps[2];
 	cv::Mat weights[2];
 	Matrix2D<Plane> planes[2];
 	cv::Mat costs[2];
 };
 
-PatchMatch::PatchMatch(float _alpha, float _gamma, float _tc, float _tg) :
-	alpha(_alpha), gamma(_gamma), tc(_tc), tg(_tg) {}
-
-PatchMatch::~PatchMatch() {}
-
-void PatchMatch::operator()(const cv::Mat &img1, const cv::Mat &img2,
-			    int iterations, bool reverse)
-{
-	this->set(img1, img2);
-	this->process(iterations, reverse);
-	this->postProcess();
-}
+PatchMatch::PatchMatch(float alpha, float gamma, float tc, float tg) :
+	alpha(alpha), gamma(gamma), tc(tc), tg(tg) {}
 
 cv::Mat PatchMatch::getLeftDisparityMap() const { return this->disps[0]; }
 cv::Mat PatchMatch::getRightDisparityMap() const { return this->disps[1]; }
 
-void PatchMatch::precompute_pixels_weights(const cv::Mat &img,
-					   cv::Mat &weights,
-					   int window_size)
+void PatchMatch::precompute_pixels_weights(const cv::Mat &img, cv::Mat &weights, int ws)
 {
-	int ws_half = window_size/2;
+	int ws_half = ws / 2;
 
 	#pragma omp parallel for
-	for (int cx = 0; cx < img.cols; ++cx) {
-		for (int cy = 0; cy < img.rows; ++cy) {
+	for (int cx = 0; cx < this->cols; ++cx) {
+		for (int cy = 0; cy < this->rows; ++cy) {
 			for (int x = cx-ws_half; x <= cx+ws_half; ++x) {
 				for (int y = cy-ws_half; y <= cy+ws_half; ++y) {
-					if (x>=0 && x<img.cols && y>=0 && y<img.rows) {
+					if (x>=0 && x<this->cols && y>=0 && y<this->rows) {
 						cv::Vec<int, 4> pos = cv::Vec<int, 4>(cy, cx,
 								y-cy+ws_half, x-cx+ws_half);
 						cv::Vec3f p = static_cast<cv::Vec3f>(
 								img.at<cv::Vec3b>(cy, cx));
 						cv::Vec3f q = static_cast<cv::Vec3f>(
 								img.at<cv::Vec3b>(y, x));
-						weights.at<float>(pos) = std::exp(-cv::norm(p-q)/gamma);
+						weights.at<float>(pos) = std::exp(-cv::norm(p-q)/this->gamma);
 					}
 				}
 			}
@@ -274,8 +253,8 @@ float PatchMatch::plane_match_cost(const Plane &p, int cx, int cy, int ws, int i
 	int half = ws/2;
 	const cv::Mat &f1 = views[idx];
 	const cv::Mat &f2 = views[1-idx];
-	const cv::Mat2f &g1 = grads[idx];
-	const cv::Mat2f &g2 = grads[1-idx];
+	const cv::Mat &g1 = grads[idx];
+	const cv::Mat &g2 = grads[1-idx];
 	const cv::Mat &w1 = weights[idx];
 
 	for (int x = cx-half; x <= cx+half; ++x) {
@@ -296,19 +275,14 @@ float PatchMatch::plane_match_cost(const Plane &p, int cx, int cy, int ws, int i
 				// wx*x + (1-wx)*y
 				cv::Vec3b mcolo = wm*f2.at<cv::Vec3b>(y, x_match) +
 						  (1-wm)*f2.at<cv::Vec3b>(y, x_match+1);
-				cv::Vec2b mgrad = wm*g2(y, x_match) + (1-wm)*g2(y, x_match+1);
+				cv::Vec2f mgrad = wm*g2.at<cv::Vec2f>(y, x_match) + (1-wm)*g2.at<cv::Vec2f>(y, x_match+1);
 				float w = w1.at<float>(cv::Vec<int, 4>{cy, cx, y-cy+half, x-cx+half});
 				cv::Vec3f pp, qq;
 				for (int i = 0; i < 3; ++i) {
 					pp[i] = static_cast<float>(f1.at<cv::Vec3b>(y, x)[i]);
 					qq[i] = static_cast<float>(mcolo[i]);
 				}
-				cv::Vec2f pg, qg;
-				for (int i = 0; i < 2; ++i) {
-					pg[i] = static_cast<float>(g1.at<cv::Vec3b>(y, x)[i]);
-					qg[i] = static_cast<float>(mgrad[i]);
-				}
-				cost += w*dissimilarity(pp, qq, pg, qg);
+				cost += w*dissimilarity(pp, qq, g1.at<cv::Vec2f>(y, x), mgrad);
 			}
 		}
 	}
@@ -369,7 +343,7 @@ void PatchMatch::spatial_propagation(int x, int y, int idx, int iter) {
 		offsets.push_back(std::make_pair(0, -1));
 	}
 
-	int sign = (idx==0 ? -1 : 1);
+	
 	Plane &old_plane = planes[idx](y, x);
 	float &old_cost = costs[idx].at<float>(y, x);
 	for (auto it = offsets.begin(); it != offsets.end(); ++it) {
@@ -390,7 +364,6 @@ void PatchMatch::spatial_propagation(int x, int y, int idx, int iter) {
 void PatchMatch::plane_refinement(int x, int y, int idx, float max_delta_z,
 				  float max_delta_n, float end_dz)
 {
-	int sign = (idx==0 ? -1 : 1);
 	float max_dz = max_delta_z;
 	float max_dn = max_delta_n;
 	Plane &old_plane = planes[idx](y, x);
@@ -436,11 +409,10 @@ void PatchMatch::planes_to_disparity(const Matrix2D<Plane> &planes, cv::Mat &dis
 }
 
 void PatchMatch::view_propagation(int x, int y, int idx) {
-	int sign = (idx==0 ? -1 : 1);
-	Plane view_plane = planes[idx](y, x);
+	Plane view_plane = this->planes[idx](y, x);
 
 	int mx, my;
-	Plane new_plane = view_plane.viewTransform(x, y, sign, mx, my);
+	Plane new_plane = view_plane.viewTransform(x, y, 2*idx-1, mx, my);
 	if (!(mx >= 0 && mx < cols && my >= 0 && my < rows)) return;
 
 	float &old_cost = costs[1-idx].at<float>(my, mx);
@@ -463,8 +435,6 @@ void PatchMatch::set(const cv::Mat &img1, const cv::Mat &img2) {
 	precompute_pixels_weights(img1, weights[0], WINDOW_SIZE);
 	precompute_pixels_weights(img2, weights[1], WINDOW_SIZE);
 
-	// this->grads[0] = cv::Mat2f(rows, cols);
-	// this->grads[1] = cv::Mat2f(rows, cols);
 	this->grads[0] = cv::Mat(rows, cols, CV_32FC2);
 	this->grads[1] = cv::Mat(rows, cols, CV_32FC2);
 	compute_gray_gradient(img1, this->grads[0]);
@@ -600,17 +570,24 @@ void github::Option::Run() {
 	/*
 	 * source code here to test
 	 */
-	// github::Solution().myqueen();
 	printf("=========================================\n");
 	printf("             PatchMatch Test             \n");
 	printf("=========================================\n");
 	std::string base_path = "/home/cv/Downloads/mvs_project/dataset/";
 	// std::string img1_path = base_path + "fountain_dense/urd/0001.png";
-	std::string img1_path = base_path + "cones/im2.png";
-	std::string img2_path = base_path + "cones/im6.png";
+	// std::string img2_path = base_path + "fountain_dense/urd/0002.png";
+	// std::string img1_path = base_path + "cones/im2.png";
+	// std::string img2_path = base_path + "cones/im6.png";
+	// std::string img1_path = base_path + "dino/dino0001.png";
+	// std::string img2_path = base_path + "dino/dino0002.png";
+	
+	std::string img1_path = base_path + "image_13a/2a_005.jpg";
+	std::string img2_path = base_path + "image_13a/2a_010.jpg";
 	// Load image and check the validity
 	cv::Mat img1 = cv::imread(img1_path, cv::IMREAD_COLOR);
 	cv::Mat img2 = cv::imread(img2_path, cv::IMREAD_COLOR);
+	cv::resize(img1, img1, cv::Size(img1.cols/4, img1.rows/4), cv::INTER_LINEAR);
+	cv::resize(img2, img2, cv::Size(img2.cols/4, img2.rows/4), cv::INTER_LINEAR);
 	if (!check_image(img1, img1_path) || !check_image(img2, img2_path)) exit(1);
 	if (!check_dimensions(img1, img2)) exit(1);
 
