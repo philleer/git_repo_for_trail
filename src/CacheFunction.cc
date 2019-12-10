@@ -15,7 +15,6 @@ class Matrix2D {
 public:
 	Matrix2D();
 	Matrix2D(size_t rows, size_t cols);
-	// Matrix2D(size_t rows, size_t cols, const T &def);
 
 	T& operator()(size_t row, size_t col);
 	const T& operator()(size_t row, size_t col) const;
@@ -34,10 +33,6 @@ Matrix2D<T>::Matrix2D() {}
 template<typename T>
 Matrix2D<T>::Matrix2D(size_t rows, size_t cols):
 	rows(rows), cols(cols), data(rows, std::vector<T>(cols)) {}
-
-// template<typename T>
-// Matrix2D<T>::Matrix2D(size_t rows, size_t cols, const T&def):
-// 	rows(rows), cols(cols), data(rows, std::vector<T>(cols, def)) {}
 
 template<typename T>
 inline T& Matrix2D<T>::operator()(size_t row, size_t col) { return data[row][col]; }
@@ -70,13 +65,6 @@ private:
 // z = - a/c * x - b/c * y - d/c
 // a = nx, b = ny, c = nz, d = -(nx * p[0] + ny * p[1] + nz * p[2])
 Plane::Plane(cv::Vec3f point, cv::Vec3f normal): point(point), normal(normal) {
-	// float a = -normal[0] / normal[2];
-	// float b = -normal[1] / normal[2];
-	// float c = (normal[0]*point[0]+normal[1]*point[1]+normal[2]*point[2])/normal[2];
-
-	// float d = cv::sum(normal.mul(point))[0] / normal[2];
-	// coeff = cv::Vec3f(a, b, c);
-
 	coeff[0] = -normal[0] / normal[2];
 	coeff[1] = -normal[1] / normal[2];
 	coeff[2] = (normal[0]*point[0]+normal[1]*point[1]+normal[2]*point[2])/normal[2];
@@ -113,7 +101,6 @@ bool check_dimensions(const cv::Mat &img1, const cv::Mat &img2) {
 	return true;
 }
 
-// void compute_gray_gradient(const cv::Mat &img, cv::Mat2f &grad) {
 void compute_gray_gradient(const cv::Mat &img, cv::Mat &grad) {
 	int scale = 1, delta = 0;
 	cv::Mat gray, x_grad, y_grad;
@@ -563,6 +550,17 @@ void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp,
 	}
 }
 
+size_t char_in_string (std::string s, char c) {
+	if (s.empty()) return 0;
+	size_t count = 0;
+
+	for (auto ch : s) {
+		if (ch == c) ++count;
+	}
+
+	return count;
+}
+
 void github::Option::Run() {
 	// Begin to count time
 	auto start = std::chrono::system_clock::now();
@@ -592,22 +590,25 @@ void github::Option::Run() {
 	if (!check_dimensions(img1, img2)) exit(1);
 
 	// Processing
-	const float alpha = 0.9f;
-	const float gamma = 10.0f;
-	const float tc = 10.f;
-	const float tg = 2.0f;
-	PatchMatch patchmatch(alpha, gamma, tc, tg);
-	patchmatch.set(img1, img2);
-	patchmatch.process(5);
-	patchmatch.postProcess();
+	// const float alpha = 0.9f;
+	// const float gamma = 10.0f;
+	// const float tc = 10.f;
+	// const float tg = 2.0f;
+	// PatchMatch patchmatch(alpha, gamma, tc, tg);
+	// patchmatch.set(img1, img2);
+	// patchmatch.process(5);
+	// patchmatch.postProcess();
 
-	cv::Mat disp1 = patchmatch.getLeftDisparityMap();
-	cv::Mat disp2 = patchmatch.getRightDisparityMap();
+	// cv::Mat disp1 = patchmatch.getLeftDisparityMap();
+	// cv::Mat disp2 = patchmatch.getRightDisparityMap();
 	// 数组的数值被平移或缩放到一个指定的范围，线性归一化
-	cv::normalize(disp1, disp1, 0, 255, cv::NORM_MINMAX);
-	cv::normalize(disp2, disp2, 0, 255, cv::NORM_MINMAX);
-	cv::imwrite("left_disparity.png", disp1);
-	cv::imwrite("right_disparity.png", disp2);
+	// cv::normalize(disp1, disp1, 0, 255, cv::NORM_MINMAX);
+	// cv::normalize(disp2, disp2, 0, 255, cv::NORM_MINMAX);
+	// cv::imwrite("left_disparity.png", disp1);
+	// cv::imwrite("right_disparity.png", disp2);
+
+	std::string str = "i am phillee!";
+	std::cout << "l in str: " << str << char_in_string(str, 'l') << std::endl;
 
 	// Time count finished here and then print to the screen
 	auto end = std::chrono::system_clock::now();
