@@ -371,10 +371,8 @@ public:
 
 		// Input images for the photometric consistency term.
 		std::vector<Image>* images = nullptr;
-
 		// Input depth maps for the geometric consistency term.
 		std::vector<DepthMap>* depth_maps = nullptr;
-
 		// Input normal maps for the geometric consistency term.
 		std::vector<NormalMap>* normal_maps = nullptr;
 
@@ -414,7 +412,6 @@ public:
 	~PatchMatchCuda();
 
 	void Run();
-
 	DepthMap getDepthMap() const;
 	NormalMap getNormalMap() const;
 	Mat<float> getSelProbMap() const;
@@ -428,7 +425,7 @@ private:
 PatchMatchCuda::~PatchMatchCuda() {}
 
 void PatchMatchCuda::Run() {
-
+	//
 }
 
 DepthMap PatchMatchCuda::getDepthMap() const {
@@ -440,12 +437,12 @@ NormalMap PatchMatchCuda::getNormalMap() const {
 }
 
 Mat<float> PatchMatchCuda::getSelProbMap() const {
-	Mat<float> m;
-	return m;
+	return Mat<float>();
 }
 
 std::vector<int> PatchMatchCuda::getConsistencyImageIdxs() const {
 	std::vector<int> consistent_image_idxs;
+	//
 	return consistent_image_idxs;
 }
 

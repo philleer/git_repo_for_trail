@@ -167,22 +167,19 @@ void PatchMatch::Check() const {
 }
 
 void PatchMatch::Run() {
-	
+
 }
 
 DepthMap PatchMatch::getDepthMap() const {
-	DepthMap dm;
-	return dm;
+	return DepthMap();
 }
 
 NormalMap PatchMatch::getNormalMap() const {
-	NormalMap nm;
-	return nm;
+	return NormalMap();
 }
 
 Mat<float> PatchMatch::getSelProbMap() const {
-	Mat<float> m;
-	return m;
+	return Mat<float>();
 }
 
 ConsistencyGraph PatchMatch::getConsistencyGraph() const {
