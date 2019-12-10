@@ -1,5 +1,5 @@
-#ifndef PATCH_MATCH_H
-#define PATCH_MATCH_H
+#ifndef SRC_PATCH_MATCH_H
+#define SRC_PATCH_MATCH_H
 
 #include <iostream>
 #include <vector>
@@ -8,167 +8,10 @@
 #include <set>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <Eigen/Core>
-
-// Definition of mat class
-template<typename T>
-class Mat {
-public:
-	Mat();
-	Mat(const size_t width, const size_t height, const size_t depth);
-	size_t getWidth() const;
-	size_t getHeight() const;
-	size_t getDepth() const;
-
-	const std::vector<T>& getData() const;
-
-protected:
-	size_t width_ = 0;
-	size_t height_ = 0;
-	size_t depth_ = 0;
-	std::vector<T> data_;
-};
-
-template<typename T>
-Mat<T>::Mat(): Mat(0, 0, 0) {}
-
-template<typename T>
-Mat<T>::Mat(const size_t width, const size_t height, const size_t depth):
-	width_(width), height_(height), depth_(depth) {
-	data_.resize(width_ * height_ * depth_, 0);
-}
-
-template<typename T>
-size_t Mat<T>::getWidth() const {
-	return width_;
-}
-
-template<typename T>
-size_t Mat<T>::getHeight() const {
-	return height_;
-}
-
-template<typename T>
-size_t Mat<T>::getDepth() const {
-	return depth_;
-}
-
-template<typename T>
-const std::vector<T>& Mat<T>::getData() const {
-	return data_;
-}
-
-class Image {
-public:
-	Image() {}
-	cv::Mat getImage() const;
-	size_t getWidth() const;
-	size_t getHeight() const;
-	inline const cv::Mat &getBitmap() const;
-	inline const float* GetK() const;
-
-private:
-	cv::Mat src_img;
-	std::string path_;
-	size_t width_;
-	size_t height_;
-	float K_[9];
-	float R_[9];
-	float T_[3];
-	float P_[12];
-	float inv_P_[12];
-};
-
-cv::Mat Image::getImage() const { return src_img; }
-size_t Image::getHeight() const { return width_; }
-size_t Image::getWidth() const { return height_; }
-const cv::Mat &Image::getBitmap() const { return src_img; }
-
-const float *Image::GetK() const { return K_; }
-
-class DepthMap : public Mat<float> {
-public:
-	DepthMap();
-	DepthMap(const size_t width, const size_t height,
-			 const float depth_min, const float depth_max);
-	DepthMap(const Mat<float> &mat, const float	depth_min,
-			 const float depth_max);
-
-	inline float getDepthMin() const;
-	inline float getDepthMax() const;
-private:
-	float depth_min_ = -1.0f;
-	float depth_max_ = -1.0f;
-};
-
-float DepthMap::getDepthMin() const { return depth_min_; }
-float DepthMap::getDepthMax() const { return depth_max_; }
-
-class NormalMap : public Mat<float> {
-public:
-	NormalMap();
-	NormalMap(const size_t width, const size_t height);
-	explicit NormalMap(const Mat<float> &mat);
-
-	void Rescale(const float factor);
-	void Downsize(const size_t max_width, const size_t max_height);
-};
-
-NormalMap::NormalMap(): Mat<float>(0, 0, 3) {}
-
-NormalMap::NormalMap(const size_t width, const size_t height):
-	Mat<float>(width, height, 3) {}
-
-NormalMap::NormalMap(const Mat<float> &mat):
-	Mat<float>(mat.getWidth(), mat.getHeight(), mat.getDepth())
-{
-	if (mat.getDepth() != 3) {
-		std::cerr << "channel of depth not equals to 3!\n";
-	}
-	data_ = mat.getData();
-}
-
-void NormalMap::Rescale(const float factor) {
-	if (0 == width_ * height_) return ;
-
-	const size_t new_width = std::round(width_ * factor);
-	const size_t new_height = std::round(height_ * factor);
-	std::vector<float> new_data(new_width * new_height * 3);
-
-	for (size_t d = 0; d < 3; ++d) {
-		const size_t offset = d * width_ * height_;
-		const size_t new_offset = d * new_width * new_height;
-		// DownsampleImage(data_.data()+offset, height_, width_,
-		// 	new_height, new_width, new_data.data()+new_offset);
-	}
-
-	data_ = new_data;
-	width_ = new_width;
-	height_ = new_height;
-
-	// data_.shrink_to_fit();
-
-	// Re-normalize the normal vectors
-	for (size_t r = 0; r < height_; ++r) {
-		for (size_t c = 0; c < width_; ++c) {
-			// Eigen::Vector3f normal(Get(r, c, 0), Get(r, c, 1), Get(r, c, 2));
-			// const float squared_norm = normal.squaredNorm();
-			// if (squared_norm > 0) {
-			// 	normal /= std::sqrt(squared_norm);
-			// }
-			// Set(r, c, 0, normal(0));
-			// Set(r, c, 1, normal(1));
-			// Set(r, c, 2, normal(2));
-		}
-	}
-}
-
-void NormalMap::Downsize(const size_t max_width, const size_t max_height) {
-	if (height_ <= max_height && width_ <= max_width) return;
-
-	const float factor_x = static_cast<float>(max_width) / width_;
-	const float factor_y = static_cast<float>(max_height) / height_;
-	Rescale(std::min(factor_x, factor_y));
-}
+#include "mvs/mat.h"
+#include "mvs/image.h"
+#include "mvs/depth_map.h"
+#include "mvs/normal_map.h"
 
 class ConsistencyGraph {
 public:
@@ -404,46 +247,5 @@ private:
 	const Problem problem_;
 	std::unique_ptr<PatchMatchCuda> patch_match_cuda_;
 };
-
-class PatchMatchCuda {
-public:
-	PatchMatchCuda(const PatchMatchOptions &options,
-				   const PatchMatch::Problem &problem);
-	~PatchMatchCuda();
-
-	void Run();
-	DepthMap getDepthMap() const;
-	NormalMap getNormalMap() const;
-	Mat<float> getSelProbMap() const;
-	std::vector<int> getConsistencyImageIdxs() const;
-
-private:
-	const PatchMatchOptions options_;
-	const PatchMatch::Problem problem_;
-};
-
-PatchMatchCuda::~PatchMatchCuda() {}
-
-void PatchMatchCuda::Run() {
-	//
-}
-
-DepthMap PatchMatchCuda::getDepthMap() const {
-	return DepthMap();
-}
-
-NormalMap PatchMatchCuda::getNormalMap() const {
-	return NormalMap();
-}
-
-Mat<float> PatchMatchCuda::getSelProbMap() const {
-	return Mat<float>();
-}
-
-std::vector<int> PatchMatchCuda::getConsistencyImageIdxs() const {
-	std::vector<int> consistent_image_idxs;
-	//
-	return consistent_image_idxs;
-}
 
 #endif
