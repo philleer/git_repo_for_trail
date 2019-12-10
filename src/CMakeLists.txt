@@ -14,4 +14,5 @@ target_link_libraries(
 		mvs
 		# base math reserve
 		${OpenCV_LIBS}
+		${CERES_LIBRARIES}
  		)

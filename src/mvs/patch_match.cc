@@ -86,7 +86,7 @@ void PatchMatch::Check() const {
 
 	for (const int image_idx : unique_image_idxs) {
 		if (image_idx < 0) {
-			std::cerr << "image_idx less than 0 : "
+			std::cerr << "image_idx less than 0! "
 			<< image_idx << std::endl;
 			exit(EXIT_FAILURE);
 		}
@@ -164,4 +164,27 @@ void PatchMatch::Check() const {
 			exit(EXIT_FAILURE);
 		}
 	}
+}
+
+void PatchMatch::Run() {
+	//
+}
+
+DepthMap PatchMatch::getDepthMap() const {
+	return DepthMap();
+}
+
+NormalMap PatchMatch::getNormalMap() const {
+	return NormalMap();
+}
+
+Mat<float> PatchMatch::getSelProbMap() const {
+	return Mat<float>();
+}
+
+ConsistencyGraph PatchMatch::getConsistencyGraph() const {
+	const auto &ref_image = problem_.images->at(problem_.ref_image_idx);
+	std::vector<int> data;
+	return ConsistencyGraph(ref_image.getWidth(), ref_image.getHeight(),
+							data);
 }
