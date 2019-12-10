@@ -167,7 +167,7 @@ void PatchMatch::Check() const {
 }
 
 void PatchMatch::Run() {
-
+	//
 }
 
 DepthMap PatchMatch::getDepthMap() const {
