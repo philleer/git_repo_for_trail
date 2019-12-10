@@ -5,8 +5,9 @@
 #include <vector>
 #include <cstddef>
 #include <memory>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <set>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <Eigen/Core>
 
 // Definition of mat class
 template<typename T>
@@ -78,10 +79,8 @@ private:
 };
 
 cv::Mat Image::getImage() const { return src_img; }
-
 size_t Image::getHeight() const { return width_; }
 size_t Image::getWidth() const { return height_; }
-
 const cv::Mat &Image::getBitmap() const { return src_img; }
 
 const float *Image::GetK() const { return K_; }
@@ -89,8 +88,10 @@ const float *Image::GetK() const { return K_; }
 class DepthMap : public Mat<float> {
 public:
 	DepthMap();
-	DepthMap(const size_t width, const size_t height, const float depth_min, const float depth_max);
-	DepthMap(const Mat<float> &mat, const float	depth_min, const float depth_max);
+	DepthMap(const size_t width, const size_t height,
+			 const float depth_min, const float depth_max);
+	DepthMap(const Mat<float> &mat, const float	depth_min,
+			 const float depth_max);
 
 	inline float getDepthMin() const;
 	inline float getDepthMax() const;
@@ -136,7 +137,8 @@ void NormalMap::Rescale(const float factor) {
 	for (size_t d = 0; d < 3; ++d) {
 		const size_t offset = d * width_ * height_;
 		const size_t new_offset = d * new_width * new_height;
-		// DownsampleImage(data_.data()+offset, height_, width_, new_height, new_width, new_data.data()+new_offset);
+		// DownsampleImage(data_.data()+offset, height_, width_,
+		// 	new_height, new_width, new_data.data()+new_offset);
 	}
 
 	data_ = new_data;
@@ -168,7 +170,22 @@ void NormalMap::Downsize(const size_t max_width, const size_t max_height) {
 	Rescale(std::min(factor_x, factor_y));
 }
 
-class ConsistencyGraph;
+class ConsistencyGraph {
+public:
+	ConsistencyGraph();
+	ConsistencyGraph(const size_t width, const size_t height,
+					 const std::vector<int> &data);
+
+	void getImageIdxs(const int row, const int col, int *num_images,
+					  const int **image_idxs) const;
+
+private:
+	void InitializeMap(const size_t width, const size_t height);
+	const static int kNoConsistentImageIds;
+	std::vector<int> data_;
+	Eigen::MatrixXi map_;
+};
+
 class PatchMatchCuda;
 
 // Maximum possible window radius for the photometric consistency cost. This
@@ -177,11 +194,8 @@ class PatchMatchCuda;
 const static size_t kMaxPatchMatchWindowRadius = 32;
 
 struct PatchMatchOptions {
-	// Maximum image size in either dimension.
-	int max_image_size = -1;
-
-	// Index of the GPU used for patch match.
-	std::string gpu_index = "-1";
+	int max_image_size = -1;	// Maximum image size in either dimension.	
+	std::string gpu_index = "-1";	// Index of the GPU used for patch match.
 
 	// Depth range in which to randomly sample depth hypotheses.
 	double depth_min = -1.0f;
@@ -203,12 +217,9 @@ struct PatchMatchOptions {
 
 	// Number of random samples to draw in Monte Carlo sampling.
 	int num_samples = 15;
-
-	// Spread of the NCC likelihood function.
-	double ncc_sigma = 0.6f;
-
-	// Minimum triangulation angle in degrees.
-	double min_triangulation_angle = 1.0f;
+	
+	double ncc_sigma = 0.6f; // Spread of the NCC likelihood function.
+	double min_triangulation_angle = 1.0f; // Minimum triang-angle in degrees.
 
 	// Spread of the incident angle likelihood function.
 	double incident_angle_sigma = 0.9f;
@@ -229,8 +240,7 @@ struct PatchMatchOptions {
 	// reprojection error in pixels.
 	double geom_consistency_max_cost = 3.0f;
 
-	// Whether to enable filtering.
-	bool filter = true;
+	bool filter = true;	// Whether to enable filtering.
 
 	// Minimum NCC coefficient for pixel to be photo-consistent.
 	double filter_min_ncc = 0.1f;
@@ -252,9 +262,8 @@ struct PatchMatchOptions {
 	// leads to reduced memory usage. Note that a single image can consume a lot
 	// of memory, if the consistency graph is dense.
 	double cache_size = 32.0;
-
-	// Whether to write the consistency graph.
-	bool write_consistency_graph = false;
+	
+	bool write_consistency_graph = false; // Whether to write the consistency graph.
 
 	void Print() const;
 	bool Check() const {
@@ -379,10 +388,10 @@ public:
 	void Run();
 
 	// Get the computed values after running the algorithm.
-	DepthMap GetDepthMap() const;
-	NormalMap GetNormalMap() const;
-	ConsistencyGraph GetConsistencyGraph() const;
-	Mat<float> GetSelProbMap() const;
+	DepthMap getDepthMap() const;
+	NormalMap getNormalMap() const;
+	ConsistencyGraph getConsistencyGraph() const;
+	Mat<float> getSelProbMap() const;
 
 private:
 	size_t char_in_string (const std::string &s, char c) const {
@@ -395,7 +404,49 @@ private:
 private:
 	const PatchMatchOptions options_;
 	const Problem problem_;
-	// std::unique_ptr<PatchMatchCuda> patch_match_cuda_;
+	std::unique_ptr<PatchMatchCuda> patch_match_cuda_;
 };
+
+class PatchMatchCuda {
+public:
+	PatchMatchCuda(const PatchMatchOptions &options,
+				   const PatchMatch::Problem &problem);
+	~PatchMatchCuda();
+
+	void Run();
+
+	DepthMap getDepthMap() const;
+	NormalMap getNormalMap() const;
+	Mat<float> getSelProbMap() const;
+	std::vector<int> getConsistencyImageIdxs() const;
+
+private:
+	const PatchMatchOptions options_;
+	const PatchMatch::Problem problem_;
+};
+
+PatchMatchCuda::~PatchMatchCuda() {}
+
+void PatchMatchCuda::Run() {
+
+}
+
+DepthMap PatchMatchCuda::getDepthMap() const {
+	return DepthMap();
+}
+
+NormalMap PatchMatchCuda::getNormalMap() const {
+	return NormalMap();
+}
+
+Mat<float> PatchMatchCuda::getSelProbMap() const {
+	Mat<float> m;
+	return m;
+}
+
+std::vector<int> PatchMatchCuda::getConsistencyImageIdxs() const {
+	std::vector<int> consistent_image_idxs;
+	return consistent_image_idxs;
+}
 
 #endif
