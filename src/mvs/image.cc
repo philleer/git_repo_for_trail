@@ -10,5 +10,5 @@ Image::Image(const std::string &path, const size_t width, const size_t height,
 	memcpy(R_, R, 9 * sizeof(float));
 	memcpy(T_, T, 9 * sizeof(float));
 }
-
+ 
 cv::Mat Image::getImage() const { return src_img; }

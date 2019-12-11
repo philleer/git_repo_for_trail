@@ -1,18 +1,20 @@
 #ifndef SRC_IMAGE_H
 #define SRC_IMAGE_H
 
+#include <opencv2/imgproc/imgproc.hpp>
+#include <cstddef>
+#include <string>
+
 class Image {
 public:
 	Image();
-	Image(const std::string &path, const size_t width, const size_t height,
-		  const float *K, const float *R, const float *T);
-
+	Image(const std::string& path, const size_t width, const size_t height,
+		  const float* K, const float* R, const float* T);
 	cv::Mat getImage() const;
 
 	inline size_t getWidth() const;
 	inline size_t getHeight() const;
 	inline const cv::Mat &getBitmap() const;
-
 	inline const float* GetK() const;
 	inline const float* GetR() const;
 	inline const float* GetT() const;
@@ -31,8 +33,9 @@ private:
 	float inv_P_[12];
 };
 
-size_t Image::getWidth() const { return height_; }
 size_t Image::getHeight() const { return width_; }
+size_t Image::getWidth() const { return height_; }
+
 const cv::Mat &Image::getBitmap() const { return src_img; }
 
 const float* Image::GetK() const { return K_; }
