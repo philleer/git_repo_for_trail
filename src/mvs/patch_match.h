@@ -13,6 +13,37 @@
 #include "mvs/depth_map.h"
 #include "mvs/normal_map.h"
 
+<<<<<<< HEAD
+=======
+// class Image {
+// public:
+// 	Image() {}
+// 	cv::Mat getImage() const;
+// 	size_t getWidth() const;
+// 	size_t getHeight() const;
+// 	inline const cv::Mat &getBitmap() const;
+// 	inline const float* GetK() const;
+
+// private:
+// 	cv::Mat src_img;
+// 	std::string path_;
+// 	size_t width_;
+// 	size_t height_;
+// 	float K_[9];
+// 	float R_[9];
+// 	float T_[3];
+// 	float P_[12];
+// 	float inv_P_[12];
+// };
+
+// cv::Mat Image::getImage() const { return src_img; }
+// size_t Image::getHeight() const { return width_; }
+// size_t Image::getWidth() const { return height_; }
+// const cv::Mat &Image::getBitmap() const { return src_img; }
+
+// const float *Image::GetK() const { return K_; }
+
+>>>>>>> 42917ec... add the necessary headers implementations
 class ConsistencyGraph {
 public:
 	ConsistencyGraph();
