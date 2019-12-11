@@ -167,7 +167,12 @@ void PatchMatch::Check() const {
 }
 
 void PatchMatch::Run() {
-	//
+	std::cout << "\nPatchMatch::Run\n";
+	std::cout << std::string(15, '-') << std::endl;
+	Check();
+
+	patch_match_cuda_.reset(new PatchMatchCuda(options_, problem_));
+	patch_match_cuda_.Run();
 }
 
 DepthMap PatchMatch::getDepthMap() const {
