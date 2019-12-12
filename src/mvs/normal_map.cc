@@ -1,4 +1,5 @@
 #include "mvs/normal_map.h"
+#include <iostream>
 #include <algorithm>
 
 NormalMap::NormalMap(): Mat<float>(0, 0, 3) {}
