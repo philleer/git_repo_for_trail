@@ -6,9 +6,15 @@
 #include <random>	// std::mt19937
 #include <algorithm>
 
+#include <cuda_runtime.h>
+#include "base/foo.h"
+
 #define WINDOW_SIZE 35
 #define MAX_DISPARITY 60
 #define PLANE_PENALTY 120
+
+extern "C"
+void CUDA();
 
 template<typename T>
 class Matrix2D {
@@ -571,16 +577,16 @@ void github::Option::Run() {
 	printf("=========================================\n");
 	printf("             PatchMatch Test             \n");
 	printf("=========================================\n");
-	std::string base_path = "/home/cv/Downloads/mvs_project/dataset/";
-	// std::string img1_path = base_path + "fountain_dense/urd/0001.png";
-	// std::string img2_path = base_path + "fountain_dense/urd/0002.png";
+	std::string base_path = "/root/mvs_project/dataset/";
+	std::string img1_path = base_path + "fountain_dense/urd/0001.png";
+	std::string img2_path = base_path + "fountain_dense/urd/0002.png";
 	// std::string img1_path = base_path + "cones/im2.png";
 	// std::string img2_path = base_path + "cones/im6.png";
 	// std::string img1_path = base_path + "dino/dino0001.png";
 	// std::string img2_path = base_path + "dino/dino0002.png";
 	
-	std::string img1_path = base_path + "image_13a/2a_005.jpg";
-	std::string img2_path = base_path + "image_13a/2a_010.jpg";
+	// std::string img1_path = base_path + "image_13a/2a_005.jpg";
+	// std::string img2_path = base_path + "image_13a/2a_010.jpg";
 	// Load image and check the validity
 	cv::Mat img1 = cv::imread(img1_path, cv::IMREAD_COLOR);
 	cv::Mat img2 = cv::imread(img2_path, cv::IMREAD_COLOR);
@@ -609,6 +615,12 @@ void github::Option::Run() {
 
 	std::string str = "i am phillee!";
 	std::cout << "l in str: " << str << char_in_string(str, 'l') << std::endl;
+
+	void* data = nullptr;
+	auto err = cudaMalloc(&data, 256);
+	printf("%s\n", cudaGetErrorString(err));
+
+	useCUDA();
 
 	// Time count finished here and then print to the screen
 	auto end = std::chrono::system_clock::now();
