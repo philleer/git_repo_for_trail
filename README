@@ -2,4 +2,6 @@ git_repo_for_trail
 
 mvs_reconstruction test this branch
 
-test cuda compilation nvcc this branch
+pre mvs_reconstruction test this branch
+
+similar to feature_x branch for master, when it is compiled and running well, it will be merged into the corresponding branch
