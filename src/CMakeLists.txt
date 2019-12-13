@@ -19,6 +19,7 @@ target_link_libraries(
 		mvscuda
 		# math 
 		# reserve
+		# base math reserve
 		${OpenCV_LIBS}
 		${CERES_LIBRARIES}
 		${CUDA_LIBRARIES}
