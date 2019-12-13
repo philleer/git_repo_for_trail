@@ -1,6 +1,7 @@
 #include "patch_match.h"
 #include <sstream>
 #include <cstdlib>	// exit, EXIT_SUCCESS, EXIT_FAILURE
+#include "base/gpu_mat.h"
 
 PatchMatch::PatchMatch(const PatchMatchOptions& options, const Problem& problem):
 	options_(options), problem_(problem) {}
