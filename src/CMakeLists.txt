@@ -1,6 +1,3 @@
-
-set(CMAKE_CXX_STANDARD 11)
- 
 aux_source_directory(. DIR_SRC)
 
 include_directories( mvs ${CUDA_TARGET_INCLUDE})
@@ -19,7 +16,6 @@ target_link_libraries(
 		mvscuda
 		# math 
 		# reserve
-		# base math reserve
 		${OpenCV_LIBS}
 		${CERES_LIBRARIES}
 		${CUDA_LIBRARIES}
