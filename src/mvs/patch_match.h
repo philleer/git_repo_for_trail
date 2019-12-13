@@ -1,5 +1,5 @@
-#ifndef PATCH_MATCH_H
-#define PATCH_MATCH_H
+#ifndef SRC_PATCH_MATCH_H
+#define SRC_PATCH_MATCH_H
 
 #include <iostream>
 #include <vector>
@@ -12,34 +12,6 @@
 #include "mvs/image.h"
 #include "mvs/depth_map.h"
 #include "mvs/normal_map.h"
-
-// class Image {
-// public:
-// 	Image() {}
-// 	cv::Mat getImage() const;
-// 	size_t getWidth() const;
-// 	size_t getHeight() const;
-// 	inline const cv::Mat &getBitmap() const;
-// 	inline const float* GetK() const;
-
-// private:
-// 	cv::Mat src_img;
-// 	std::string path_;
-// 	size_t width_;
-// 	size_t height_;
-// 	float K_[9];
-// 	float R_[9];
-// 	float T_[3];
-// 	float P_[12];
-// 	float inv_P_[12];
-// };
-
-// cv::Mat Image::getImage() const { return src_img; }
-// size_t Image::getHeight() const { return width_; }
-// size_t Image::getWidth() const { return height_; }
-// const cv::Mat &Image::getBitmap() const { return src_img; }
-
-// const float *Image::GetK() const { return K_; }
 
 class ConsistencyGraph {
 public:
@@ -275,46 +247,5 @@ private:
 	const Problem problem_;
 	std::unique_ptr<PatchMatchCuda> patch_match_cuda_;
 };
-
-class PatchMatchCuda {
-public:
-	PatchMatchCuda(const PatchMatchOptions &options,
-				   const PatchMatch::Problem &problem);
-	~PatchMatchCuda();
-
-	void Run();
-	DepthMap getDepthMap() const;
-	NormalMap getNormalMap() const;
-	Mat<float> getSelProbMap() const;
-	std::vector<int> getConsistencyImageIdxs() const;
-
-private:
-	const PatchMatchOptions options_;
-	const PatchMatch::Problem problem_;
-};
-
-PatchMatchCuda::~PatchMatchCuda() {}
-
-void PatchMatchCuda::Run() {
-	//
-}
-
-DepthMap PatchMatchCuda::getDepthMap() const {
-	return DepthMap();
-}
-
-NormalMap PatchMatchCuda::getNormalMap() const {
-	return NormalMap();
-}
-
-Mat<float> PatchMatchCuda::getSelProbMap() const {
-	return Mat<float>();
-}
-
-std::vector<int> PatchMatchCuda::getConsistencyImageIdxs() const {
-	std::vector<int> consistent_image_idxs;
-	//
-	return consistent_image_idxs;
-}
 
 #endif

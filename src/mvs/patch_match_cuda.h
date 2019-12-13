@@ -1,5 +1,5 @@
-#ifndef _SRC_MVS_PATCH_MATCH_CUDA_H_
-#define _SRC_MVS_PATCH_MATCH_CUDA_H_
+#ifndef SRC_MVS_PATCH_MATCH_CUDA_H
+#define SRC_MVS_PATCH_MATCH_CUDA_H
 
 #include <iostream>
 #include <memory>
