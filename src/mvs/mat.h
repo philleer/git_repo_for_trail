@@ -14,6 +14,8 @@ public:
 	size_t getHeight() const;
 	size_t getDepth() const;
 
+	T* getPtr();
+	const T* getPtr() const;
 	const std::vector<T>& getData() const;
 
 protected:
@@ -45,6 +47,16 @@ size_t Mat<T>::getHeight() const {
 template<typename T>
 size_t Mat<T>::getDepth() const {
 	return depth_;
+}
+
+template<typename T>
+T* Mat<T>::getPtr() {
+	return data_.data();
+}
+
+template<typename T>
+const T* Mat<T>::getPtr() const {
+	return data_.data();
 }
 
 template<typename T>

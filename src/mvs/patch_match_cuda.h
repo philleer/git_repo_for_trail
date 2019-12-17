@@ -8,12 +8,12 @@
 #include <cuda_runtime.h>
 
 // #include "mvs/cuda_array_wrapper.h"
-// #include "mvs/depth_map.h"
-#include "base/gpu_mat.h"
+#include "mvs/depth_map.h"
+#include "mvs/gpu_mat.h"
 // #include "mvs/gpu_mat_prng.h"
 // #include "mvs/gpu_mat_ref_image.h"
 #include "mvs/image.h"
-// #include "mvs/normal_map.h"
+#include "mvs/normal_map.h"
 #include "mvs/patch_match.h"
 
 namespace gpu {
@@ -26,10 +26,10 @@ public:
 
 	void Run();
 
-	// DepthMap GetDepthMap() const;
-	// NormalMap GetNormalMap() const;
-	// Mat<float> GetSelProbMap() const;
-	std::vector<int> GetConsistentImageIdxs() const;
+	DepthMap getDepthMap() const;
+	NormalMap getNormalMap() const;
+	Mat<float> getSelProbMap() const;
+	std::vector<int> getConsistentImageIdxs() const;
 
 private:
 	template <int kWindowSize, int kWindowStep>

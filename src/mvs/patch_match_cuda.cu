@@ -1237,20 +1237,20 @@ void PatchMatchCuda::Run() {
 #undef CALL_RUN_FUNC
 }
 
-// DepthMap PatchMatchCuda::GetDepthMap() const {
-//   return DepthMap(depth_map_->CopyToMat(), options_.depth_min,
-//                   options_.depth_max);
-// }
+DepthMap PatchMatchCuda::getDepthMap() const {
+    return DepthMap(depth_map_->copyToMat(), options_.depth_min,
+                    options_.depth_max);
+}
 
-// NormalMap PatchMatchCuda::GetNormalMap() const {
-//   return NormalMap(normal_map_->CopyToMat());
-// }
+NormalMap PatchMatchCuda::getNormalMap() const {
+    return NormalMap(normal_map_->copyToMat());
+}
 
-// Mat<float> PatchMatchCuda::GetSelProbMap() const {
-//   return prev_sel_prob_map_->CopyToMat();
-// }
+Mat<float> PatchMatchCuda::getSelProbMap() const {
+    return prev_sel_prob_map_->copyToMat();
+}
 
-std::vector<int> PatchMatchCuda::GetConsistentImageIdxs() const {
+std::vector<int> PatchMatchCuda::getConsistentImageIdxs() const {
   // const Mat<uint8_t> mask = consistency_mask_->CopyToMat();
   std::vector<int> consistent_image_idxs;
   // std::vector<int> pixel_consistent_image_idxs;

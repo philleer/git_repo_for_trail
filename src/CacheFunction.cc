@@ -7,7 +7,6 @@
 #include <algorithm>
 
 #include <cuda_runtime.h>
-#include "base/foo.h"
 
 #define WINDOW_SIZE 35
 #define MAX_DISPARITY 60
@@ -619,8 +618,6 @@ void github::Option::Run() {
 	void* data = nullptr;
 	auto err = cudaMalloc(&data, 256);
 	printf("%s\n", cudaGetErrorString(err));
-
-	useCUDA();
 
 	// Time count finished here and then print to the screen
 	auto end = std::chrono::system_clock::now();
