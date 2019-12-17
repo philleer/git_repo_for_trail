@@ -1,17 +1,24 @@
 #ifndef SRC_PATCH_MATCH_H
 #define SRC_PATCH_MATCH_H
 
-#include <iostream>
-#include <vector>
-#include <cstddef>
-#include <memory>
-#include <set>
+#include <iostream>	// std::cout, std::endl, std::cerr
+#include <vector>	// std::vector
+#include <cstddef>	// size_t
+#include <memory>	// std::unique_ptr
+#include <set>		// std::set
+#include <mutex>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <Eigen/Core>
 #include "mvs/mat.h"
 #include "mvs/image.h"
 #include "mvs/depth_map.h"
 #include "mvs/normal_map.h"
+// #include "util/threading.h"
+
+// Maximum possible window radius for the photometric consistency cost. This
+// value is equal to THREADS_PER_BLOCK in patch_match_cuda.cu and the limit
+// arises from the shared memory implementation.
+const static size_t kMaxPatchMatchWindowRadius = 32;
 
 <<<<<<< HEAD
 =======
@@ -60,12 +67,11 @@ private:
 	Eigen::MatrixXi map_;
 };
 
+namespace gpu {
 class PatchMatchCuda;
+}
 
-// Maximum possible window radius for the photometric consistency cost. This
-// value is equal to THREADS_PER_BLOCK in patch_match_cuda.cu and the limit
-// arises from the shared memory implementation.
-const static size_t kMaxPatchMatchWindowRadius = 32;
+class Workspace;
 
 struct PatchMatchOptions {
 	int max_image_size = -1;	// Maximum image size in either dimension.	
@@ -276,7 +282,61 @@ private:
 private:
 	const PatchMatchOptions options_;
 	const Problem problem_;
-	std::unique_ptr<PatchMatchCuda> patch_match_cuda_;
+	std::unique_ptr<gpu::PatchMatchCuda> patch_match_cuda_;
 };
+
+
+// __CUDACC__ is defined on both device and host.
+// __CUDA_ARCH__ is defined on the device only
+// __NVCC__ Defined when compiling C/C++/CUDA source files.
+// __CUDACC__ Defined when compiling CUDA source files.
+
+// architecture identification macro __CUDA_ARCH__
+// The architecture identification macro __CUDA_ARCH__ is assigned
+// a three-digit value string xy0 (ending in a literal 0) during each
+// nvcc compilation stage 1 that compiles for compute_xy.
+// This macro can be used in the implementation of GPU functions
+// for determining the virtual architecture for which it is currently
+// being compiled. The host code (the non-GPU code) must not depend on it.
+
+#ifndef __CUDACC__
+
+class PatchMatchController /*: public Thread*/ {
+public:
+	PatchMatchController(const PatchMatchOptions& options,
+						 const std::string& workspace_path,
+						 const std::string& workspace_format,
+						 const std::string& pmvs_option_name);
+
+private:
+	void Run();
+	void ReadWorkspace();
+	void ReadProblems();
+	void ReadGpuIndices();
+	void ProcessProblem(const PatchMatchOptions& options,
+						const size_t problem_idx);
+
+	const PatchMatchOptions options_;
+	const std::string workspace_path_;
+	const std::string workspace_format_;
+	const std::string pmvs_option_name_;
+
+	// std::unique_ptr<ThreadPool> thread_pool_;
+	std::mutex workspace_mutex_;
+// 	std::unique_ptr<Workspace> workspace_;
+	std::vector<PatchMatch::Problem> problems_;
+	std::vector<int> gpu_indices_;
+	std::vector<std::pair<float, float>> depth_ranges_;
+
+private:
+	size_t char_in_string (const std::string &s, char c) const {
+		if (s.empty()) return 0;
+		size_t count = 0;
+		for (auto ch : s) if (ch == c) ++count;
+		return count;
+	}
+};
+
+#endif
 
 #endif

@@ -1,17 +1,28 @@
 
 set(MVS_SRCS
 	depth_map.h depth_map.cc
+	image.h image.cc
 	mat.h
 	normal_map.h normal_map.cc
 	patch_match.h patch_match.cc
-	image.h image.cc
 	)
 set(MVS_CUDA_SRCS
+	gpu_mat.h
 	patch_match_cuda.h patch_match_cuda.cu
 	)
 
-add_library( mvs STATIC ${MVS_SRCS} )
+# set(UTIL_THREAD
+# 	../util/util_sys.h ../util/util_sys.cc
+# 	../util/threading.h ../util/threading.cc
+# 	)
 
-cuda_add_library( mvscuda STATIC ${MVS_CUDA_SRCS} )
+add_library( mvs STATIC ${MVS_SRCS}
+	# ${UTIL_THREAD}
+	)
 
-target_link_libraries( mvs ${OpenCV_LIBS} )
+cuda_add_library( mvscuda STATIC ${MVS_CUDA_SRCS})
+
+target_link_libraries( mvs
+		# util
+		${OpenCV_LIBS}
+	)

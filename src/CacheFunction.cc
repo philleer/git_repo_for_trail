@@ -7,14 +7,10 @@
 #include <algorithm>
 
 #include <cuda_runtime.h>
-#include "base/foo.h"
 
 #define WINDOW_SIZE 35
 #define MAX_DISPARITY 60
 #define PLANE_PENALTY 120
-
-extern "C"
-void CUDA();
 
 template<typename T>
 class Matrix2D {
@@ -556,17 +552,6 @@ void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp,
 	}
 }
 
-size_t char_in_string (std::string s, char c) {
-	if (s.empty()) return 0;
-	size_t count = 0;
-
-	for (auto ch : s) {
-		if (ch == c) ++count;
-	}
-
-	return count;
-}
-
 void github::Option::Run() {
 	// Begin to count time
 	auto start = std::chrono::system_clock::now();
@@ -613,14 +598,9 @@ void github::Option::Run() {
 	// cv::imwrite("left_disparity.png", disp1);
 	// cv::imwrite("right_disparity.png", disp2);
 
-	std::string str = "i am phillee!";
-	std::cout << "l in str: " << str << char_in_string(str, 'l') << std::endl;
-
 	void* data = nullptr;
 	auto err = cudaMalloc(&data, 256);
 	printf("%s\n", cudaGetErrorString(err));
-
-	useCUDA();
 
 	// Time count finished here and then print to the screen
 	auto end = std::chrono::system_clock::now();

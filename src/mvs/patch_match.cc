@@ -1,7 +1,35 @@
-#include "patch_match.h"
+#include "mvs/patch_match.h"
+
+#include "mvs/patch_match_cuda.h"
 #include <sstream>
 #include <cstdlib>	// exit, EXIT_SUCCESS, EXIT_FAILURE
-#include "base/gpu_mat.h"
+#include <cstdio>
+
+void PatchMatchOptions::Print() const {
+	std::cout << "\nPatchMatchOptions\n";
+	std::cout << std::string(15, '-') << std::endl;
+	std::cout << "max_image_size: " << max_image_size << std::endl;
+	std::cout << "gpu_index: " << gpu_index << std::endl;
+	std::cout << "depth_min: " << depth_min
+			<< ", depth_max: " << depth_max << std::endl;
+	std::cout << "window_radius: " << window_radius << std::endl;
+	std::cout << "window_step: " << window_step << std::endl;
+	std::cout << "sigma_spatial: " << sigma_spatial << std::endl;
+	std::cout << "sigma_color: " << sigma_color << std::endl;
+	std::cout << "num_samples: " << num_samples << std::endl;
+	std::cout << "ncc_sigma: " << ncc_sigma << std::endl;
+	std::cout << "min_triangulation_angle: " << min_triangulation_angle << std::endl;
+	std::cout << "incident_angle_sigma: " << incident_angle_sigma << std::endl;
+	std::cout << "num_iterations: " << num_iterations << std::endl;
+	std::cout << "geom_consistency: " << geom_consistency << std::endl;
+	std::cout << "geom_consistency_regularizer: " << geom_consistency_regularizer << std::endl;
+	std::cout << "filter: " << filter << std::endl;
+	std::cout << "filter_min_ncc: " << filter_min_ncc << std::endl;
+	std::cout << "filter_min_num_consistent: " << filter_min_num_consistent << std::endl;
+	std::cout << "filter_min_triangulation_angle: " << filter_min_triangulation_angle << std::endl;
+	std::cout << "filter_geom_consistency_max_cost: " << filter_geom_consistency_max_cost << std::endl;
+	std::cout << "write_consistency_graph: " << write_consistency_graph << std::endl;
+}
 
 PatchMatch::PatchMatch(const PatchMatchOptions& options, const Problem& problem):
 	options_(options), problem_(problem) {}
@@ -172,25 +200,112 @@ void PatchMatch::Run() {
 	std::cout << std::string(15, '-') << std::endl;
 	Check();
 
-	patch_match_cuda_.reset(new PatchMatchCuda(options_, problem_));
-	patch_match_cuda_.Run();
+	patch_match_cuda_.reset(new gpu::PatchMatchCuda(options_, problem_));
+	patch_match_cuda_->Run();
 }
 
 DepthMap PatchMatch::getDepthMap() const {
+	// return patch_match_cuda_->getDepthMap();
 	return DepthMap();
 }
 
 NormalMap PatchMatch::getNormalMap() const {
+	// return patch_match_cuda_->getNormalMap(); 
 	return NormalMap();
 }
 
 Mat<float> PatchMatch::getSelProbMap() const {
+	// return patch_match_cuda_->getSelProbMap();
 	return Mat<float>();
 }
 
 ConsistencyGraph PatchMatch::getConsistencyGraph() const {
 	const auto &ref_image = problem_.images->at(problem_.ref_image_idx);
-	std::vector<int> data;
 	return ConsistencyGraph(ref_image.getWidth(), ref_image.getHeight(),
-							data);
+							patch_match_cuda_->getConsistentImageIdxs());
+}
+
+PatchMatchController::PatchMatchController(const PatchMatchOptions& options,
+	const std::string& workspace_path,
+	const std::string& workspace_format,
+	const std::string& pmvs_option_name):
+	options_(options),
+	workspace_path_(workspace_path),
+	workspace_format_(workspace_format),
+	pmvs_option_name_(pmvs_option_name)
+{
+	// std::vector<int> gpu_indices = ;
+	std::stringstream ss;
+	ss.str(options_.gpu_index);
+	size_t index_nums = this->char_in_string(options_.gpu_index, ',');
+	std::vector<int> gpu_indices(index_nums+1, 0);
+	for (int i = 0; i < index_nums; ++i) {
+		ss >> gpu_indices[i];
+	}
+}
+
+void PatchMatchController::Run() {
+	ReadWorkspace();
+	ReadProblems();
+	ReadGpuIndices();
+
+	if (options_.geom_consistency) {
+		auto photometric_options = options_;
+		photometric_options.geom_consistency = false;
+		photometric_options.filter = false;
+
+		for (size_t problem_idx = 0; problem_idx < problems_.size(); ++problem_idx) {
+			//
+		}
+	}
+}
+
+void PatchMatchController::ReadWorkspace() {
+	std::cout << "Reading workspace..." << std::endl;
+}
+
+void PatchMatchController::ReadProblems() {
+	std::cout << "Reading configuration..." << std::endl;
+	problems_.clear();
+}
+
+void PatchMatchController::ReadGpuIndices() {
+
+}
+
+void PatchMatchController::ProcessProblem(const PatchMatchOptions& options,
+										  const size_t problem_idx)
+{
+	// if (IsStopped()) return;
+
+	// const auto &model = workspace_->getModel();
+	auto &problem = problems_.at(problem_idx);
+	// const int gpu_index = gpu_indices.at(thread_pool_->getThreadIndex());
+	// if (gpu_index < -1) {
+	// 	std::cerr << "No avaliable gpu!\n";
+	// 	exit(EXIT_FAILURE);
+	// }
+
+	const std::string output_type = options.geom_consistency ? "geometric" : "photometric";
+	// const std::string image_name = model.getImageName(problem.ref_image_idx);
+	const std::string image_name = "tmp_image_name";
+
+	auto patch_match_options = options;
+	if (patch_match_options.depth_min < 0 || patch_match_options.depth_max < 0) {
+		patch_match_options.depth_min = depth_ranges_.at(
+											problem.ref_image_idx).first;
+		patch_match_options.depth_max = depth_ranges_.at(
+											problem.ref_image_idx).second;
+		if (patch_match_options.depth_min <= 0 || patch_match_options.depth_max <= 0) {
+			printf(" - You must manually set the minimum and maximum depth, since no \
+	       			sparse model is provided in the workspace.\n");
+		}	    
+	}
+
+	PatchMatch patch_match(patch_match_options, problem);
+	patch_match.Run();
+	printf("\nWriting %s output for %s\n", output_type.c_str(), image_name.c_str());
+	if (options.write_consistency_graph) {
+		// patch_match.getConsistencyGraph().Write(consistency_graph_path);
+	}
 }
