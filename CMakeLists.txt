@@ -104,9 +104,32 @@ target_link_libraries(main
 
 
 #===============================================================================
-# TEST UNIT
+# CacheFunction TEST UNIT
 #===============================================================================
-add_executable(thread_test src/util/threading.cc src/util/threading.h src/util/threading_test.cc)
+add_executable( cache_test
+		src/cache_test.cc
+		src/CacheFunction.cc
+		src/CacheFunction.h
+	)
+target_link_libraries( cache_test 
+	PRIVATE
+		src
+		Boost::unit_test_framework
+	)
+
+target_compile_definitions( cache_test
+	PRIVATE
+		BOOST_TEST_DYN_LINK
+	)
+
+enable_testing()
+add_test( NAME SignTest COMMAND $<TARGET_FILE:cache_test> )
+
+
+#===============================================================================
+# THREAD TEST UNIT
+#===============================================================================
+add_executable(thread_test src/util/threading.cc src/util/threading_test.cc)
 target_link_libraries( thread_test
 	PRIVATE
 		src
@@ -118,13 +141,12 @@ target_compile_definitions( thread_test
 		BOOST_TEST_DYN_LINK
 	)
 
-enable_testing()
+# enable_testing()
 add_test( NAME TestThreadWait COMMAND $<TARGET_FILE:thread_test> )
 add_test( NAME TestThreadPause COMMAND $<TARGET_FILE:thread_test> )
 add_test( NAME TestThreadStop COMMAND $<TARGET_FILE:thread_test> )
 add_test( NAME TestThreadPauseStop COMMAND $<TARGET_FILE:thread_test> )
 add_test( NAME TestThreadRestart COMMAND $<TARGET_FILE:thread_test> )
-
 # add_test( NAME TestThreadValidSetup COMMAND $<TARGET_FILE:thread_test> )
 # add_test( NAME TestThreadInvalidSetup COMMAND $<TARGET_FILE:thread_test> )
 add_test( NAME TestCallback COMMAND $<TARGET_FILE:thread_test> )

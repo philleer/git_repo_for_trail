@@ -1,6 +1,12 @@
 #ifndef SRC_IMAGE_H
 #define SRC_IMAGE_H
 
+#include <string>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <opencv2/imgproc/imgproc.hpp>
+
 class Image {
 public:
 	Image();

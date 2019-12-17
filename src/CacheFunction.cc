@@ -553,15 +553,13 @@ void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp,
 	}
 }
 
-size_t char_in_string (std::string s, char c) {
-	if (s.empty()) return 0;
-	size_t count = 0;
-
-	for (auto ch : s) {
-		if (ch == c) ++count;
+int github::Option::sum_integers(const std::vector<int> &integers) {
+	auto sum = 0;
+	for (auto i : integers) {
+		sum += i;
 	}
 
-	return count;
+	return sum;
 }
 
 void github::Option::Run() {
@@ -610,12 +608,14 @@ void github::Option::Run() {
 	// cv::imwrite("left_disparity.png", disp1);
 	// cv::imwrite("right_disparity.png", disp2);
 
-	std::string str = "i am phillee!";
-	std::cout << "l in str: " << str << char_in_string(str, 'l') << std::endl;
-
 	void* data = nullptr;
 	auto err = cudaMalloc(&data, 256);
 	printf("%s\n", cudaGetErrorString(err));
+
+	// cache test
+	std::vector<int> integers{1, 2, 3, 4, 5, 6, 7, 8, 9};
+	auto sum = sum_integers(integers);
+	std::cout << sum << std::endl;
 
 	// Time count finished here and then print to the screen
 	auto end = std::chrono::system_clock::now();
