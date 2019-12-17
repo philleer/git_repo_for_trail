@@ -6,13 +6,14 @@
 #include <cstddef>	// size_t
 #include <memory>	// std::unique_ptr
 #include <set>		// std::set
+#include <mutex>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <Eigen/Core>
 #include "mvs/mat.h"
 #include "mvs/image.h"
 #include "mvs/depth_map.h"
 #include "mvs/normal_map.h"
-#include "util/threading.h"
+// #include "util/threading.h"
 
 // Maximum possible window radius for the photometric consistency cost. This
 // value is equal to THREADS_PER_BLOCK in patch_match_cuda.cu and the limit
@@ -269,7 +270,7 @@ private:
 
 #ifndef __CUDACC__
 
-class PatchMatchController : public Thread {
+class PatchMatchController /*: public Thread*/ {
 public:
 	PatchMatchController(const PatchMatchOptions& options,
 						 const std::string& workspace_path,
@@ -289,7 +290,7 @@ private:
 	const std::string workspace_format_;
 	const std::string pmvs_option_name_;
 
-	std::unique_ptr<ThreadPool> thread_pool_;
+	// std::unique_ptr<ThreadPool> thread_pool_;
 	std::mutex workspace_mutex_;
 // 	std::unique_ptr<Workspace> workspace_;
 	std::vector<PatchMatch::Problem> problems_;

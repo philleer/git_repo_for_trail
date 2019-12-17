@@ -3,7 +3,7 @@ aux_source_directory(. DIR_SRC)
 include_directories( mvs ${CUDA_TARGET_INCLUDE})
 
 add_subdirectory( mvs )
-add_subdirectory( util )
+# add_subdirectory( util )
 # add_subdirectory( base )
 # add_subdirectory( math )
 # add_subdirectory( reserve )
@@ -14,7 +14,7 @@ target_link_libraries(
 		src
 		mvs
 		mvscuda
-		util
+		# util
 		# base
 		# math 
 		# reserve
