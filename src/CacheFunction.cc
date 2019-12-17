@@ -7,13 +7,11 @@
 #include <algorithm>
 
 #include <cuda_runtime.h>
+#include "util/threading.h"
 
 #define WINDOW_SIZE 35
 #define MAX_DISPARITY 60
 #define PLANE_PENALTY 120
-
-extern "C"
-void CUDA();
 
 template<typename T>
 class Matrix2D {
