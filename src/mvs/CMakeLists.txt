@@ -11,16 +11,18 @@ set(MVS_CUDA_SRCS
 	patch_match_cuda.h patch_match_cuda.cu
 	)
 
-set(UTIL_THREAD
-	../util/util_sys.h ../util/util_sys.cc
-	../util/threading.h ../util/threading.cc
-	)
+# set(UTIL_THREAD
+# 	../util/util_sys.h ../util/util_sys.cc
+# 	../util/threading.h ../util/threading.cc
+# 	)
 
-add_library( mvs STATIC ${MVS_SRCS} ${UTIL_THREAD})
+add_library( mvs STATIC ${MVS_SRCS}
+	# ${UTIL_THREAD}
+	)
 
 cuda_add_library( mvscuda STATIC ${MVS_CUDA_SRCS})
 
 target_link_libraries( mvs
-		util
+		# util
 		${OpenCV_LIBS}
 	)

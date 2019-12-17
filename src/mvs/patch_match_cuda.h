@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <string>
 
 #include <cuda_runtime.h>
 
@@ -17,6 +18,19 @@
 #include "mvs/normal_map.h"
 #include "mvs/patch_match.h"
 
+class CudaTimer {
+public:
+    CudaTimer();
+    ~CudaTimer();
+
+    void Print(const std::string& message);
+
+private:
+    cudaEvent_t start_;
+    cudaEvent_t stop_;
+    float elapsed_time_;
+};
+
 namespace gpu {
 
 class PatchMatchCuda {
@@ -27,24 +41,24 @@ public:
 
 	void Run();
 
-	DepthMap getDepthMap() const;
-	NormalMap getNormalMap() const;
-	Mat<float> getSelProbMap() const;
+	// DepthMap getDepthMap() const;
+	// NormalMap getNormalMap() const;
+	// Mat<float> getSelProbMap() const;
 	std::vector<int> getConsistentImageIdxs() const;
 
 private:
-	template<int kWindowSize, int kWindowStep>
-	void RunWithWindowSizeAndStep();
+	// template <int kWindowSize, int kWindowStep>
+	// void RunWithWindowSizeAndStep();
 
-	void ComputeCudaConfig();
+	// void ComputeCudaConfig();
 
-	void InitRefImage();
-	void InitSourceImages();
-	void InitTransforms();
-	void InitWorkspaceMemory();
+	// void InitRefImage();
+	// void InitSourceImages();
+	// void InitTransforms();
+	// void InitWorkspaceMemory();
 
-	// Rotate reference image by 90 degrees in counter-clockwise direction.
-	void Rotate();
+	// // Rotate reference image by 90 degrees in counter-clockwise direction.
+	// void Rotate();
 
 	const PatchMatchOptions options_;
 	const PatchMatch::Problem problem_;

@@ -1,6 +1,6 @@
 #include "mvs/patch_match.h"
 
-// #include "mvs/patch_match_cuda.h"
+#include "mvs/patch_match_cuda.h"
 #include <sstream>
 #include <cstdlib>	// exit, EXIT_SUCCESS, EXIT_FAILURE
 #include <cstdio>
@@ -205,15 +205,18 @@ void PatchMatch::Run() {
 }
 
 DepthMap PatchMatch::getDepthMap() const {
-	return patch_match_cuda_->getDepthMap();
+	// return patch_match_cuda_->getDepthMap();
+	return DepthMap();
 }
 
 NormalMap PatchMatch::getNormalMap() const {
-	return patch_match_cuda_->getNormalMap(); 
+	// return patch_match_cuda_->getNormalMap(); 
+	return NormalMap();
 }
 
 Mat<float> PatchMatch::getSelProbMap() const {
-	return patch_match_cuda_->getSelProbMap();
+	// return patch_match_cuda_->getSelProbMap();
+	return Mat<float>();
 }
 
 ConsistencyGraph PatchMatch::getConsistencyGraph() const {
@@ -251,7 +254,7 @@ void PatchMatchController::Run() {
 		photometric_options.geom_consistency = false;
 		photometric_options.filter = false;
 
-		for (size_t problem_idx = 0; problem_idx < problem_idx.size(); ++problem_idx) {
+		for (size_t problem_idx = 0; problem_idx < problems_.size(); ++problem_idx) {
 			//
 		}
 	}
@@ -273,7 +276,19 @@ void PatchMatchController::ReadGpuIndices() {
 void PatchMatchController::ProcessProblem(const PatchMatchOptions& options,
 										  const size_t problem_idx)
 {
-	if (IsStopped()) return;
+	// if (IsStopped()) return;
+
+	// const auto &model = workspace_->getModel();
+	auto &problem = problems_.at(problem_idx);
+	// const int gpu_index = gpu_indices.at(thread_pool_->getThreadIndex());
+	// if (gpu_index < -1) {
+	// 	std::cerr << "No avaliable gpu!\n";
+	// 	exit(EXIT_FAILURE);
+	// }
+
+	const std::string output_type = options.geom_consistency ? "geometric" : "photometric";
+	// const std::string image_name = model.getImageName(problem.ref_image_idx);
+	const std::string image_name = "tmp_image_name";
 
 	auto patch_match_options = options;
 	if (patch_match_options.depth_min < 0 || patch_match_options.depth_max < 0) {
