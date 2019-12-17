@@ -3,22 +3,23 @@ aux_source_directory(. DIR_SRC)
 include_directories( mvs ${CUDA_TARGET_INCLUDE})
 
 add_subdirectory( mvs )
-# add_subdirectory( util )
+add_subdirectory( util )
 # add_subdirectory( base )
 # add_subdirectory( math )
 # add_subdirectory( reserve )
 
-add_library(src STATIC ${DIR_SRC})
+add_library(src STATIC ${DIR_SRC} ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(
 		src
 		mvs
 		mvscuda
-		# util
+		util
 		# base
 		# math 
 		# reserve
 		${OpenCV_LIBS}
 		${CERES_LIBRARIES}
 		${CUDA_LIBRARIES}
+		${Boost_LIBRARIES}
  	)
