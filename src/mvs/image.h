@@ -37,8 +37,9 @@ private:
 	float inv_P_[12];
 };
 
-size_t Image::getWidth() const { return height_; }
 size_t Image::getHeight() const { return width_; }
+size_t Image::getWidth() const { return height_; }
+
 const cv::Mat &Image::getBitmap() const { return src_img; }
 
 const float* Image::GetK() const { return K_; }

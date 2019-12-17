@@ -617,6 +617,10 @@ void github::Option::Run() {
 	auto sum = sum_integers(integers);
 	std::cout << sum << std::endl;
 
+	void* data = nullptr;
+	auto err = cudaMalloc(&data, 256);
+	printf("%s\n", cudaGetErrorString(err));
+
 	// Time count finished here and then print to the screen
 	auto end = std::chrono::system_clock::now();
 	auto duration = std::chrono::duration<double>(end - start);

@@ -10,7 +10,6 @@
 
 // #include "mvs/cuda_array_wrapper.h"
 #include "mvs/depth_map.h"
-#include "mvs/mat.h"
 #include "mvs/gpu_mat.h"
 // #include "mvs/gpu_mat_prng.h"
 // #include "mvs/gpu_mat_ref_image.h"

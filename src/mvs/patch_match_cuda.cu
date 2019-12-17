@@ -1167,7 +1167,7 @@ namespace gpu {
 // }
 
 PatchMatchCuda::PatchMatchCuda(const PatchMatchOptions& options,
-							                 const PatchMatch::Problem& problem):
+							   const PatchMatch::Problem& problem):
 	options_(options), problem_(problem), ref_width_(0), ref_height_(0),
 	rotation_in_half_pi_(0) {
   // SetBestCudaDevice(std::stoi(options_.gpu_index));

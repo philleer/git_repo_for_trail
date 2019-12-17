@@ -129,7 +129,11 @@ add_test( NAME SignTest COMMAND $<TARGET_FILE:cache_test> )
 #===============================================================================
 # THREAD TEST UNIT
 #===============================================================================
-add_executable(thread_test src/util/threading.cc src/util/threading_test.cc)
+add_executable(thread_test
+		src/util/threading.cc
+		src/util/threading.h
+		src/util/threading_test.cc
+	)
 target_link_libraries( thread_test
 	PRIVATE
 		src
