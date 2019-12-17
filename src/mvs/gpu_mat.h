@@ -12,7 +12,7 @@
 // #include "mvs/cuda_flip.h"
 // #include "mvs/cuda_rotate.h"
 // #include "mvs/cuda_transpose.h"
-// #include "mvs/mat.h"
+#include "mvs/mat.h"
 // #include "util/cuda.h"
 // #include "util/cudacc.h"
 // #include "util/endian.h"
@@ -63,8 +63,8 @@ class GpuMat {
                              GpuMat<curandState> random_state);
 
   void CopyToDevice(const T* data, const size_t pitch);
-  void CopyToHost(T* data, const size_t pitch) const;
-  // Mat<T> CopyToMat() const;
+  void copyToHost(T* data, const size_t pitch) const;
+  Mat<T> copyToMat() const;
 
   // Transpose array by swapping x and y coordinates.
   void Transpose(GpuMat<T>* output);
@@ -270,18 +270,18 @@ void GpuMat<T>::CopyToDevice(const T* data, const size_t pitch) {
 }
 
 template <typename T>
-void GpuMat<T>::CopyToHost(T* data, const size_t pitch) const {
+void GpuMat<T>::copyToHost(T* data, const size_t pitch) const {
   // CUDA_SAFE_CALL(cudaMemcpy2D((void*)data, pitch, (void*)array_ptr_,
                               // (size_t)pitch_, width_ * sizeof(T),
                               // height_ * depth_, cudaMemcpyDeviceToHost));
 }
 
-// template <typename T>
-// Mat<T> GpuMat<T>::CopyToMat() const {
-//   Mat<T> mat(width_, height_, depth_);
-//   CopyToHost(mat.GetPtr(), mat.GetWidth() * sizeof(T));
-//   return mat;
-// }
+template <typename T>
+Mat<T> GpuMat<T>::copyToMat() const {
+    Mat<T> mat(width_, height_, depth_);
+    copyToHost(mat.getPtr(), mat.getWidth() * sizeof(T));
+    return mat;
+}
 
 template <typename T>
 void GpuMat<T>::Transpose(GpuMat<T>* output) {
@@ -349,7 +349,7 @@ void GpuMat<T>::Read(const std::string& path) {
 template <typename T>
 void GpuMat<T>::Write(const std::string& path) {
   std::vector<T> dest(width_ * height_ * depth_);
-  CopyToHost(dest.data(), width_ * sizeof(T));
+  copyToHost(dest.data(), width_ * sizeof(T));
 
   std::fstream text_file(path, std::ios::out);
   text_file << width_ << "&" << height_ << "&" << depth_ << "&";

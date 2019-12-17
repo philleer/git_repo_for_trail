@@ -49,12 +49,12 @@ set(CUDA_TARGET_INCLUDE "/usr/local/cuda-8.0/target/x86_64-linux/include")
 # INCLUDE DIRECTORIES CONFIGURATION
 #===============================================================================
 include_directories(
-	src
-	${OpenCV_INCLUDE_DIRS}
-	${OpenMP_INCLUDE_DIRS}
-	${CERES_INCLUDE_DIRS}
-	${EIGEN_DIR}
-	${CUDA_TARGET_INCLUDE}
+		src
+		${OpenCV_INCLUDE_DIRS}
+		${OpenMP_INCLUDE_DIRS}
+		${CERES_INCLUDE_DIRS}
+		${EIGEN_DIR}
+		${CUDA_TARGET_INCLUDE}
 	)
 
 
