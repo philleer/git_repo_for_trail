@@ -21,6 +21,7 @@
 const static size_t kMaxPatchMatchWindowRadius = 32;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // class Image {
 // public:
@@ -51,6 +52,8 @@ const static size_t kMaxPatchMatchWindowRadius = 32;
 // const float *Image::GetK() const { return K_; }
 
 >>>>>>> 42917ec... add the necessary headers implementations
+=======
+>>>>>>> 0d52f80de8c82b397eb80a2ce02c7f1990a1102f
 class ConsistencyGraph {
 public:
 	ConsistencyGraph();

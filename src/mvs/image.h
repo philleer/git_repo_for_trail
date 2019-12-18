@@ -10,7 +10,6 @@ public:
 	Image();
 	Image(const std::string &path, const size_t width, const size_t height,
 		  const float *K, const float *R, const float *T);
-
 	cv::Mat getImage() const;
 
 	inline size_t getWidth() const;
@@ -37,6 +36,7 @@ private:
 
 size_t Image::getWidth() const { return height_; }
 size_t Image::getHeight() const { return width_; }
+
 const cv::Mat &Image::getBitmap() const { return src_img; }
 
 const float* Image::GetK() const { return K_; }
