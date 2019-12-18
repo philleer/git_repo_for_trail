@@ -12,9 +12,6 @@
 #define MAX_DISPARITY 60
 #define PLANE_PENALTY 120
 
-extern "C"
-void CUDA();
-
 template<typename T>
 class Matrix2D {
 public:
@@ -555,17 +552,6 @@ void PatchMatch::weighted_median_filter(int cx, int cy, cv::Mat &disp,
 	}
 }
 
-size_t char_in_string (std::string s, char c) {
-	if (s.empty()) return 0;
-	size_t count = 0;
-
-	for (auto ch : s) {
-		if (ch == c) ++count;
-	}
-
-	return count;
-}
-
 void github::Option::Run() {
 	// Begin to count time
 	auto start = std::chrono::system_clock::now();
@@ -611,9 +597,6 @@ void github::Option::Run() {
 	// cv::normalize(disp2, disp2, 0, 255, cv::NORM_MINMAX);
 	// cv::imwrite("left_disparity.png", disp1);
 	// cv::imwrite("right_disparity.png", disp2);
-
-	std::string str = "i am phillee!";
-	std::cout << "l in str: " << str << char_in_string(str, 'l') << std::endl;
 
 	void* data = nullptr;
 	auto err = cudaMalloc(&data, 256);
