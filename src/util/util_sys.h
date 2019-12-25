@@ -10,6 +10,9 @@ typedef std::chrono::high_resolution_clock SystemTime;
 typedef std::chrono::time_point<SystemTime> TimePoint;
 typedef std::chrono::duration<double, std::milli> Duration;
 
+/*
+ * 返回值为-1表示文件或文件夹不存在，为0表示存在
+ */
 int is_file_exist(const char *file_path);
 int is_dir_exist(const char *dir_path);
 

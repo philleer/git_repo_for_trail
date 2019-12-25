@@ -30,7 +30,7 @@ private:
     float elapsed_time_;
 };
 
-namespace gpu {
+// namespace gpu {
 
 class PatchMatchCuda {
 public:
@@ -118,6 +118,6 @@ private:
 	std::unique_ptr<GpuMat<float>> global_workspace_;
 };
 
-} // namespace gpu
+// } // namespace gpu
 
 #endif

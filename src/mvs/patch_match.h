@@ -4,6 +4,7 @@
 #include <iostream>	// std::cout, std::endl, std::cerr
 #include <vector>	// std::vector
 #include <cstddef>	// size_t
+#include <algorithm>// transform
 #include <memory>	// std::unique_ptr
 #include <set>		// std::set
 #include <mutex>
@@ -13,55 +14,41 @@
 #include "mvs/image.h"
 #include "mvs/depth_map.h"
 #include "mvs/normal_map.h"
-// #include "util/threading.h"
+#include "mvs/model.h"
+#include "util/cache.h"
+#include "util/util_sys.h"
+
+#ifndef __CUDACC__
+#include "util/threading.h"
+#endif
 
 // Maximum possible window radius for the photometric consistency cost. This
 // value is equal to THREADS_PER_BLOCK in patch_match_cuda.cu and the limit
 // arises from the shared memory implementation.
 const static size_t kMaxPatchMatchWindowRadius = 32;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// class Image {
-// public:
-// 	Image() {}
-// 	cv::Mat getImage() const;
-// 	size_t getWidth() const;
-// 	size_t getHeight() const;
-// 	inline const cv::Mat &getBitmap() const;
-// 	inline const float* GetK() const;
-
-// private:
-// 	cv::Mat src_img;
-// 	std::string path_;
-// 	size_t width_;
-// 	size_t height_;
-// 	float K_[9];
-// 	float R_[9];
-// 	float T_[3];
-// 	float P_[12];
-// 	float inv_P_[12];
-// };
-
-// cv::Mat Image::getImage() const { return src_img; }
-// size_t Image::getHeight() const { return width_; }
-// size_t Image::getWidth() const { return height_; }
-// const cv::Mat &Image::getBitmap() const { return src_img; }
-
-// const float *Image::GetK() const { return K_; }
-
->>>>>>> 42917ec... add the necessary headers implementations
-=======
->>>>>>> 0d52f80de8c82b397eb80a2ce02c7f1990a1102f
+// List of geometrically consistent images, in the following format:
+//
+//    r_1, c_1, N_1, i_11, i_12, ..., i_1N_1,
+//    r_2, c_2, N_2, i_21, i_22, ..., i_2N_2, ...
+//
+// where r, c are the row and column image coordinates of the pixel,
+// N is the number of consistent images, followed by the N image indices.
+// Note that only pixels are listed which are not filtered and that the
+// consistency graph is only filled if filtering is enabled.
 class ConsistencyGraph {
 public:
 	ConsistencyGraph();
 	ConsistencyGraph(const size_t width, const size_t height,
 					 const std::vector<int> &data);
+	
+	size_t getNumBytes() const;
 
 	void getImageIdxs(const int row, const int col, int *num_images,
 					  const int **image_idxs) const;
+
+	void Read(const std::string& path);
+	void Write(const std::string& path) const;
 
 private:
 	void InitializeMap(const size_t width, const size_t height);
@@ -70,11 +57,321 @@ private:
 	Eigen::MatrixXi map_;
 };
 
-namespace gpu {
-class PatchMatchCuda;
+ConsistencyGraph::ConsistencyGraph() {}
+
+ConsistencyGraph::ConsistencyGraph(const size_t width, const size_t height,
+	const std::vector<int> &data) : data_(data) {
+	InitializeMap(width, height);
 }
 
-class Workspace;
+size_t ConsistencyGraph::getNumBytes() const {
+	return (data_.size() + map_.size())*sizeof(int);
+}
+
+void ConsistencyGraph::getImageIdxs(const int row, const int col, int* num_images,
+	const int **image_idxs) const
+{
+	const int index = map_(row, col);
+	if (index == kNoConsistentImageIds) {
+		*num_images = 0;
+		*image_idxs = nullptr;
+	} else {
+		*num_images = data_.at(index);
+		*image_idxs = &data_.at(index+1);
+	}
+}
+
+void ConsistencyGraph::Read(const std::string &path) {
+	std::fstream text_file(path, std::ios::in | std::ios::binary);
+	if (!text_file.is_open()) {
+		std::cerr << path << " load failed!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	size_t width = 0, height = 0, depth = 0;
+	char unused_char;
+	text_file >> width >> unused_char >> height >> unused_char
+			>> depth >> unused_char;
+	const std::streampos pos = text_file.tellg();
+	text_file.close();
+
+	if (width <= 0 || height <= 0 || depth <= 0) {
+		std::cerr << "dimension of the file error!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	std::fstream binary_file(path, std::ios::in | std::ios::binary);
+	if (!binary_file.is_open()) {
+		std::cerr << path << " load failed!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	binary_file.seekg(0, std::ios::end);
+	const size_t num_bytes = binary_file.tellg() - pos;
+	data_.resize(num_bytes / sizeof(int));
+
+	binary_file.seekg(pos);
+	for (size_t i = 0; i < data_.size(); ++i) {
+		binary_file.read(reinterpret_cast<char*>(&data_[i]), sizeof(int));
+	}
+
+	binary_file.close();
+	InitializeMap(width, height);
+}
+
+void ConsistencyGraph::Write(const std::string& path) const {
+	std::fstream text_file(path, std::ios::out);
+	if (!text_file.is_open()) {
+		std::cerr << path << " load failed!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	text_file << map_.cols() << "&" << map_.rows() << "&" << 1 << "&";
+	text_file.close();
+
+	std::fstream binary_file(path,
+	                       std::ios::out | std::ios::binary | std::ios::app);
+	if (!binary_file.is_open()) {
+		std::cerr << path << " load failed!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	for (size_t i = 0; i < data_.size(); ++i) {
+		binary_file.write(reinterpret_cast<const char*>(&data_[i]), sizeof(int));
+	}
+	binary_file.close();
+}
+
+void ConsistencyGraph::InitializeMap(const size_t width, const size_t height) {
+	map_.resize(height, width);
+	map_.setConstant(kNoConsistentImageIds);
+	for (size_t i = 0; i < data_.size();) {
+		const int num_images = data_.at(i+2);
+		if (num_images > 0) {
+			const int col = data_.at(i);
+			const int row = data_.at(i+1);
+			map_(row, col) = i + 2;
+		}
+		i += (3+num_images);
+	}
+}
+
+class PatchMatchCuda;
+
+class Workspace {
+public:
+	struct Options {
+		// The maximum cache size in gigabytes.
+		double cache_size = 32.0;
+
+		// Maximum image size in either dimension.
+		int max_image_size = -1;
+
+		// Whether to read image as RGB or gray scale.
+		bool image_as_rgb = true;
+
+		// Location and type of workspace.
+		std::string workspace_path;
+		std::string workspace_format;
+		std::string input_type;
+		std::string stereo_folder = "stereo";
+	};
+	Workspace(const Options& options);
+
+	void ClearCache();
+
+	const Options& GetOptions() const;
+
+	const Model& GetModel() const;
+	const cv::Mat& GetSrcmap(const int image_idx);
+	// const Bitmap& GetBitmap(const int image_idx);
+	const DepthMap& GetDepthMap(const int image_idx);
+	const NormalMap& GetNormalMap(const int image_idx);
+
+	// Get paths to bitmap, depth map, normal map and consistency graph.
+	// std::string GetBitmapPath(const int image_idx) const;
+	std::string GetSrcmapPath(const int image_idx) const;
+	std::string GetDepthMapPath(const int image_idx) const;
+	std::string GetNormalMapPath(const int image_idx) const;
+
+	// Return whether bitmap, depth map, normal map, and consistency graph exist.
+	// bool HasBitmap(const int image_idx) const;
+	bool HasDepthMap(const int image_idx) const;
+	bool HasNormalMap(const int image_idx) const;
+
+private:
+	std::string GetFileName(const int image_idx) const;
+
+	class CachedImage {
+	public:
+		CachedImage();
+		CachedImage(CachedImage&& other);
+		CachedImage& operator=(CachedImage&& other);
+		size_t NumBytes() const;
+		size_t num_bytes = 0;
+		// std::unique_ptr<Bitmap> bitmap;
+		std::unique_ptr<cv::Mat> srcmap;
+		std::unique_ptr<DepthMap> depth_map;
+		std::unique_ptr<NormalMap> normal_map;
+
+	private:
+		CachedImage(CachedImage const& obj) = delete;
+		void operator=(CachedImage const& obj) = delete;
+	};
+
+	Options options_;
+	Model model_;
+	MemoryConstrainedLRUCache<int, CachedImage> cache_;
+	std::string depth_map_path_;
+	std::string normal_map_path_;
+};
+
+Workspace::CachedImage::CachedImage() {}
+
+Workspace::CachedImage::CachedImage(CachedImage&& other) {
+	num_bytes = other.num_bytes;
+	// bitmap = std::move(other.bitmap);
+	srcmap = std::move(other.srcmap);
+	depth_map = std::move(other.depth_map);
+	normal_map = std::move(other.normal_map);
+}
+
+Workspace::CachedImage& Workspace::CachedImage::operator=(CachedImage&& other) {
+	if (this != &other) {
+		num_bytes = other.num_bytes;
+		// bitmap = std::move(other.bitmap);
+		srcmap = std::move(other.srcmap);
+		depth_map = std::move(other.depth_map);
+		normal_map = std::move(other.normal_map);
+	}
+	return *this;
+}
+
+size_t Workspace::CachedImage::NumBytes() const { return num_bytes; }
+
+Workspace::Workspace(const Options& options) : options_(options),
+      cache_(1024*1024*1024*static_cast<size_t>(options_.cache_size),
+             [](const int) { return CachedImage(); })
+{
+	std::string &input = options_.input_type;
+	std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+	model_.Read(options_.workspace_path, options_.workspace_format);
+	if (options_.max_image_size > 0) {
+		for (auto& image : model_.images) {
+			// image.Downsize(options_.max_image_size, options_.max_image_size);
+		}
+	}
+
+	depth_map_path_ = options_.workspace_path + "/" +
+					  options_.stereo_folder + "/depth_maps/";
+	if (depth_map_path_.back() != '/') {
+		depth_map_path_ += "/";
+	}
+	normal_map_path_ = options_.workspace_path + "/" +
+					   options_.stereo_folder + "/normal_maps/";
+	if (normal_map_path_.back() != '/') {
+		normal_map_path_ += "/";
+	}
+}
+
+void Workspace::ClearCache() { cache_.Clear(); }
+
+const Workspace::Options& Workspace::GetOptions() const { return options_; }
+
+const Model& Workspace::GetModel() const { return model_; }
+
+const cv::Mat& Workspace::GetSrcmap(const int image_idx) {
+	cv::Mat tmpimg = cv::Mat(cv::Size(1024, 1024), CV_8UC3);
+	return tmpimg;
+}
+
+// const Bitmap& Workspace::GetBitmap(const int image_idx) {
+//   auto& cached_image = cache_.GetMutable(image_idx);
+//   if (!cached_image.bitmap) {
+//     cached_image.bitmap.reset(new Bitmap());
+//     cached_image.bitmap->Read(GetBitmapPath(image_idx), options_.image_as_rgb);
+//     if (options_.max_image_size > 0) {
+//       cached_image.bitmap->Rescale(model_.images.at(image_idx).GetWidth(),
+//                                    model_.images.at(image_idx).GetHeight());
+//     }
+//     cached_image.num_bytes += cached_image.bitmap->NumBytes();
+//     cache_.UpdateNumBytes(image_idx);
+//   }
+//   return *cached_image.bitmap;
+// }
+
+const DepthMap& Workspace::GetDepthMap(const int image_idx) {
+	auto& cached_image = cache_.GetMutable(image_idx);
+	if (!cached_image.depth_map) {
+		cached_image.depth_map.reset(new DepthMap());
+		cached_image.depth_map->Read(GetDepthMapPath(image_idx));
+    	if (options_.max_image_size > 0) {
+  //     cached_image.depth_map->Downsize(model_.images.at(image_idx).GetWidth(),
+  //                                      model_.images.at(image_idx).GetHeight());
+    	}
+  //   cached_image.num_bytes += cached_image.depth_map->GetNumBytes();
+  //   cache_.UpdateNumBytes(image_idx);
+  }
+	return *cached_image.depth_map;
+}
+
+const NormalMap& Workspace::GetNormalMap(const int image_idx) {
+	auto& cached_image = cache_.GetMutable(image_idx);
+	if (!cached_image.normal_map) {
+		cached_image.normal_map.reset(new NormalMap());
+		cached_image.normal_map->Read(GetNormalMapPath(image_idx));
+		if (options_.max_image_size > 0) {
+  //     cached_image.normal_map->Downsize(
+  //         model_.images.at(image_idx).GetWidth(),
+  //         model_.images.at(image_idx).GetHeight());
+		}
+  //   cached_image.num_bytes += cached_image.normal_map->GetNumBytes();
+  //   cache_.UpdateNumBytes(image_idx);
+	}
+	return *cached_image.normal_map;
+	// return NormalMap();
+}
+
+// std::string Workspace::GetBitmapPath(const int image_idx) const {
+// 	return model_.images.at(image_idx).GetPath();
+// }
+
+std::string Workspace::GetSrcmapPath(const int image_idx) const {
+	return model_.images.at(image_idx).GetPath();
+}
+
+std::string Workspace::GetDepthMapPath(const int image_idx) const {
+	return depth_map_path_ + GetFileName(image_idx);
+}
+
+std::string Workspace::GetNormalMapPath(const int image_idx) const {
+	return normal_map_path_ + GetFileName(image_idx);
+}
+
+// bool Workspace::HasBitmap(const int image_idx) const {
+//   return ExistsFile(GetBitmapPath(image_idx));
+// }
+
+bool Workspace::HasDepthMap(const int image_idx) const {
+	if (is_file_exist(GetDepthMapPath(image_idx).c_str()) == 0) {
+		return true;
+	}
+	return false;
+	// return ExistsFile(GetDepthMapPath(image_idx));
+}
+
+bool Workspace::HasNormalMap(const int image_idx) const {
+	if (is_file_exist(GetNormalMapPath(image_idx).c_str()) == 0) {
+		return true;
+	}
+	return false;
+	// return ExistsFile(GetNormalMapPath(image_idx));
+}
+
+std::string Workspace::GetFileName(const int image_idx) const {
+	const auto& image_name = model_.GetImageName(image_idx);
+	char stmp[100];
+	sprintf(stmp, "%s.%s.bin", image_name.c_str(), options_.input_type.c_str());
+	return std::string(stmp);
+}
 
 struct PatchMatchOptions {
 	int max_image_size = -1;	// Maximum image size in either dimension.	
@@ -285,7 +582,7 @@ private:
 private:
 	const PatchMatchOptions options_;
 	const Problem problem_;
-	std::unique_ptr<gpu::PatchMatchCuda> patch_match_cuda_;
+	std::unique_ptr<PatchMatchCuda> patch_match_cuda_;
 };
 
 
@@ -304,7 +601,7 @@ private:
 
 #ifndef __CUDACC__
 
-class PatchMatchController /*: public Thread*/ {
+class PatchMatchController : public Thread {
 public:
 	PatchMatchController(const PatchMatchOptions& options,
 						 const std::string& workspace_path,
@@ -324,9 +621,9 @@ private:
 	const std::string workspace_format_;
 	const std::string pmvs_option_name_;
 
-	// std::unique_ptr<ThreadPool> thread_pool_;
+	std::unique_ptr<ThreadPool> thread_pool_;
 	std::mutex workspace_mutex_;
-// 	std::unique_ptr<Workspace> workspace_;
+	// std::unique_ptr<Workspace> workspace_;
 	std::vector<PatchMatch::Problem> problems_;
 	std::vector<int> gpu_indices_;
 	std::vector<std::pair<float, float>> depth_ranges_;

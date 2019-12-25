@@ -29,7 +29,7 @@
 //     }
 // }
 
-namespace gpu {
+// namespace gpu {
 
 template <typename T>
 class GpuMat {
@@ -392,6 +392,6 @@ void GpuMat<T>::ComputeCudaConfig() {
 
 #endif  // __CUDACC__
 
-}  // namespace gpu
+// }  // namespace gpu
 
 #endif  // _SRC_MVS_GPU_MAT_H_

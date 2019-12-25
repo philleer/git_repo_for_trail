@@ -16,6 +16,7 @@ public:
 	inline size_t getHeight() const;
 	inline const cv::Mat &getBitmap() const;
 
+	inline const std::string& GetPath() const;
 	inline const float* GetK() const;
 	inline const float* GetR() const;
 	inline const float* GetT() const;
@@ -38,6 +39,8 @@ size_t Image::getWidth() const { return height_; }
 size_t Image::getHeight() const { return width_; }
 
 const cv::Mat &Image::getBitmap() const { return src_img; }
+
+const std::string& Image::GetPath() const { return path_; }
 
 const float* Image::GetK() const { return K_; }
 const float* Image::GetR() const { return R_; }

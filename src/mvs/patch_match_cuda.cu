@@ -88,7 +88,7 @@ void CudaTimer::Print(const std::string& message) {
 //     struct _Reference_wrapper_base<std::vector<T>> {};
 // }
 
-namespace gpu {
+// namespace gpu {
 
 // texture<uint8_t, cudaTextureType2D, cudaReadModeNormalizedFloat>
 //     ref_image_texture;
@@ -1777,4 +1777,4 @@ std::vector<int> PatchMatchCuda::getConsistentImageIdxs() const {
   // ComputeCudaConfig();
 // }
 
-}  // namespace gpu
+// }  // namespace gpu

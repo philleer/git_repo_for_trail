@@ -200,7 +200,7 @@ void PatchMatch::Run() {
 	std::cout << std::string(15, '-') << std::endl;
 	Check();
 
-	patch_match_cuda_.reset(new gpu::PatchMatchCuda(options_, problem_));
+	patch_match_cuda_.reset(new PatchMatchCuda(options_, problem_));
 	patch_match_cuda_->Run();
 }
 
@@ -276,15 +276,15 @@ void PatchMatchController::ReadGpuIndices() {
 void PatchMatchController::ProcessProblem(const PatchMatchOptions& options,
 										  const size_t problem_idx)
 {
-	// if (IsStopped()) return;
+	if (IsStopped()) return;
 
 	// const auto &model = workspace_->getModel();
 	auto &problem = problems_.at(problem_idx);
-	// const int gpu_index = gpu_indices.at(thread_pool_->getThreadIndex());
-	// if (gpu_index < -1) {
-	// 	std::cerr << "No avaliable gpu!\n";
-	// 	exit(EXIT_FAILURE);
-	// }
+	const int gpu_index = gpu_indices_.at(thread_pool_->GetThreadIndex());
+	if (gpu_index < -1) {
+		std::cerr << "No avaliable gpu!\n";
+		exit(EXIT_FAILURE);
+	}
 
 	const std::string output_type = options.geom_consistency ? "geometric" : "photometric";
 	// const std::string image_name = model.getImageName(problem.ref_image_idx);
