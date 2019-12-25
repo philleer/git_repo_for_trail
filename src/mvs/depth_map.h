@@ -2,6 +2,7 @@
 #define SRC_DEPTH_MAP_H
 
 #include "mvs/mat.h"
+#include "mvs/image.h"
 
 class DepthMap : public Mat<float> {
 public:
@@ -13,6 +14,9 @@ public:
 
 	inline float getDepthMin() const;
 	inline float getDepthMax() const;
+
+	void Rescale(const float factor);
+	void Downsize(const size_t max_width, const size_t max_height);
 private:
 	float depth_min_ = -1.0f;
 	float depth_max_ = -1.0f;

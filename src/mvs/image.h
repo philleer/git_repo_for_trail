@@ -48,4 +48,8 @@ const float* Image::GetT() const { return T_; }
 const float* Image::GetP() const { return P_; }
 const float* Image::GetInvP() const { return inv_P_; }
 
+void DownsampleImage(const float* data, const int rows, const int cols,
+                     const int new_rows, const int new_cols,
+                     float* downsampled);
+
 #endif

@@ -303,13 +303,13 @@ const DepthMap& Workspace::GetDepthMap(const int image_idx) {
 	if (!cached_image.depth_map) {
 		cached_image.depth_map.reset(new DepthMap());
 		cached_image.depth_map->Read(GetDepthMapPath(image_idx));
-    	if (options_.max_image_size > 0) {
-  //     cached_image.depth_map->Downsize(model_.images.at(image_idx).GetWidth(),
-  //                                      model_.images.at(image_idx).GetHeight());
+		if (options_.max_image_size > 0) {
+			cached_image.depth_map->Downsize(model_.images.at(image_idx).getWidth(),
+											 model_.images.at(image_idx).getHeight());
     	}
-  //   cached_image.num_bytes += cached_image.depth_map->GetNumBytes();
-  //   cache_.UpdateNumBytes(image_idx);
-  }
+		cached_image.num_bytes += cached_image.depth_map->getNumBytes();
+		cache_.UpdateNumBytes(image_idx);
+	}
 	return *cached_image.depth_map;
 }
 
@@ -319,15 +319,14 @@ const NormalMap& Workspace::GetNormalMap(const int image_idx) {
 		cached_image.normal_map.reset(new NormalMap());
 		cached_image.normal_map->Read(GetNormalMapPath(image_idx));
 		if (options_.max_image_size > 0) {
-  //     cached_image.normal_map->Downsize(
-  //         model_.images.at(image_idx).GetWidth(),
-  //         model_.images.at(image_idx).GetHeight());
+			cached_image.normal_map->Downsize(
+				model_.images.at(image_idx).getWidth(),
+				model_.images.at(image_idx).getHeight());
 		}
-  //   cached_image.num_bytes += cached_image.normal_map->GetNumBytes();
-  //   cache_.UpdateNumBytes(image_idx);
+		cached_image.num_bytes += cached_image.normal_map->getNumBytes();
+		cache_.UpdateNumBytes(image_idx);
 	}
 	return *cached_image.normal_map;
-	// return NormalMap();
 }
 
 // std::string Workspace::GetBitmapPath(const int image_idx) const {
@@ -355,7 +354,6 @@ bool Workspace::HasDepthMap(const int image_idx) const {
 		return true;
 	}
 	return false;
-	// return ExistsFile(GetDepthMapPath(image_idx));
 }
 
 bool Workspace::HasNormalMap(const int image_idx) const {
@@ -363,7 +361,6 @@ bool Workspace::HasNormalMap(const int image_idx) const {
 		return true;
 	}
 	return false;
-	// return ExistsFile(GetNormalMapPath(image_idx));
 }
 
 std::string Workspace::GetFileName(const int image_idx) const {
@@ -623,7 +620,7 @@ private:
 
 	std::unique_ptr<ThreadPool> thread_pool_;
 	std::mutex workspace_mutex_;
-	// std::unique_ptr<Workspace> workspace_;
+	std::unique_ptr<Workspace> workspace_;
 	std::vector<PatchMatch::Problem> problems_;
 	std::vector<int> gpu_indices_;
 	std::vector<std::pair<float, float>> depth_ranges_;
