@@ -1,6 +1,7 @@
 #include "mvs/normal_map.h"
 #include <iostream>
 #include <algorithm>
+#include <Eigen/Core>
 
 NormalMap::NormalMap(): Mat<float>(0, 0, 3) {}
 
@@ -39,14 +40,14 @@ void NormalMap::Rescale(const float factor) {
 	// Re-normalize the normal vectors
 	for (size_t r = 0; r < height_; ++r) {
 		for (size_t c = 0; c < width_; ++c) {
-			// Eigen::Vector3f normal(Get(r, c, 0), Get(r, c, 1), Get(r, c, 2));
-			// const float squared_norm = normal.squaredNorm();
-			// if (squared_norm > 0) {
-			// 	normal /= std::sqrt(squared_norm);
-			// }
-			// Set(r, c, 0, normal(0));
-			// Set(r, c, 1, normal(1));
-			// Set(r, c, 2, normal(2));
+			Eigen::Vector3f normal(get(r, c, 0), get(r, c, 1), get(r, c, 2));
+			const float squared_norm = normal.squaredNorm();
+			if (squared_norm > 0) {
+				normal /= std::sqrt(squared_norm);
+			}
+			set(r, c, 0, normal(0));
+			set(r, c, 1, normal(1));
+			set(r, c, 2, normal(2));
 		}
 	}
 }
